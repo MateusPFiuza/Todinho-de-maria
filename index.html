@@ -383,9 +383,12 @@ function update(){
   const clearToSpawn=rightmost<W-GAP;
 
   obsT++;
-  if(obsT>=(starMode?Math.max(50,obsI-15):obsI)&&clearToSpawn){
-    obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:['a','b','c'][Math.floor(Math.random()*3)]});
-    obsT=0;obsI=Math.max(85,obsI-.20);
+  const obsCanSpawn=starMode
+    ?obs.reduce((m,o)=>Math.max(m,o.x),-Infinity)<W-100
+    :clearToSpawn;
+  if(obsT>=(starMode?25:obsI)&&obsCanSpawn){
+    obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
+    obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
   }
 
   itmT++;
