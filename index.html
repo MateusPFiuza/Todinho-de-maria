@@ -357,7 +357,7 @@ function update(){
   if(score>=600){state=ST.WIN;return;}
   
   // Base speed + speed boost
-  let baseSpd=6.5+Math.min(dist/4800,6);
+  let baseSpd=6.5+Math.min(dist/9000,3);
   spd=speedBoost.active ? baseSpd*1.4 : baseSpd;  // 40% mais rápido com boost
 
   // Distância mínima entre qualquer objeto e a borda direita antes de spawnar
@@ -368,7 +368,7 @@ function update(){
   obsT++;
   if(obsT>=obsI&&clearToSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:['a','b','c'][Math.floor(Math.random()*3)]});
-    obsT=0;obsI=Math.max(70,obsI-.35);  // Spawn mais agressivo
+    obsT=0;obsI=Math.max(85,obsI-.20);
   }
 
   itmT++;
