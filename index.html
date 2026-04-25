@@ -88,7 +88,7 @@ const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5};
 let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
-let shield,shT,flash,flashT,bgOff,dist;
+let shield,shT,flash,flashT,bgOff,dist,starMode,starT;
 let speedBoost={active:false,duration:0};  // speed boost from livro item
 let paused=false;
 let menu_btns={};  // buttons for menu and help screens
@@ -96,9 +96,9 @@ let game_btns={};  // buttons for game screens
 
 function init(){
   score=0;dist=0;spd=5.2;  // score será calculado de dist em km
-  obsT=0;obsI=100;   // obstáculos — mais frequentes
+  obsT=0;obsI=90;    // obstáculos
   itmT=60;itmI=140;  // itens — menos frequentes que obstáculos
-  shield=false;shT=0;flash=false;flashT=0;bgOff=0;
+  shield=false;shT=0;flash=false;flashT=0;bgOff=0;starMode=false;starT=0;
   speedBoost={active:false,duration:0};
   obs=[];its=[];parts=[];
   pl={lane:1,x:LANE.px[1],y:LY[1]-PH,vy:0,jOff:0,
@@ -182,6 +182,11 @@ function drawPlayer(){
   if(pl.attacking){
     ctx.save();ctx.globalAlpha=0.72;ctx.fillStyle='#FFD700';
     ctx.beginPath();ctx.arc(pl.x+PW*0.45,dy+PH*0.3,20,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  if(starMode){
+    ctx.save();ctx.globalAlpha=0.5+0.45*Math.abs(Math.sin(Date.now()/70));
+    ctx.fillStyle='#FFD700';ctx.fillRect(dx,dy,PW,PH);
     ctx.restore();
   }
 }
@@ -294,16 +299,21 @@ function drawHUD(){
 
 // Efeitos de item sobrepostos ao jogo (não no HUD)
 function drawItemEffects(){
-  if(!speedBoost?.active&&!shield)return;
+  if(!speedBoost?.active&&!shield&&!starMode)return;
   const ty=HUD_H+36;
   ctx.save();ctx.textAlign='center';ctx.font='bold 16px Arial';
+  let yOff=0;
   if(speedBoost?.active){
     ctx.fillStyle='rgba(255,152,0,0.18)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#CC4400';ctx.fillText('⚡ ACELERADO',W/2,ty);
+    ctx.fillStyle='#CC4400';ctx.fillText('⚡ ACELERADO',W/2,ty);yOff+=20;
   }
   if(shield){
     ctx.fillStyle='rgba(0,191,255,0.15)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#005C8A';ctx.fillText('🛡 ESCUDO ATIVO',W/2,speedBoost?.active?ty+20:ty);
+    ctx.fillStyle='#005C8A';ctx.fillText('🛡 Dom da Fortaleza',W/2,ty+yOff);yOff+=20;
+  }
+  if(starMode){
+    ctx.fillStyle='rgba(255,215,0,0.15)';ctx.fillRect(0,HUD_H,W,50);
+    ctx.fillStyle='#7A5200';ctx.fillText('✨ Intercessão de Maria',W/2,ty+yOff);
   }
   ctx.restore();
 }
@@ -319,7 +329,7 @@ function checkCols(){
     const ix=it.x-IW/2,iy=LY[it.lane]-IH-16;
     if(overlap(px,py,pw,ph,ix,iy,IW,IH)){
       if(it.type==='livro'){if(pl.lives<3){pl.lives++;spawnP(it.x,iy+IH/2,'#E53935',10);}}
-      if(it.type==='estrela'){obs=[];spawnP(it.x,iy+IH/2,'#FFD700',16);}  // Limpa todos obstáculos na tela
+      if(it.type==='estrela'){starMode=true;starT=360;spawnP(it.x,iy+IH/2,'#FFD700',16);}  // Limpa todos obstáculos na tela
       if(it.type==='escudo'){shield=true;shT=300;spawnP(it.x,iy+IH/2,'#4CAF50',12);}
       its.splice(i,1);
     }
@@ -331,10 +341,10 @@ function checkCols(){
     const[ow,oh]=OS[o.type];
     const ox=o.x-ow/2+6,oy=LY[o.lane]-oh+6;
     if(!overlap(px,py,pw,ph,ox,oy,ow-12,oh-12))continue;
-    let ok=false;
-    if(o.type==='a')ok=pl.jumping;
-    if(o.type==='b')ok=pl.attacking;
-    if(o.type==='c')ok=o.lane!==pl.lane;
+    let ok=starMode;
+    if(o.type==='a')ok=ok||pl.jumping;
+    if(o.type==='b')ok=ok||pl.attacking;
+    if(o.type==='c')ok=ok||o.lane!==pl.lane;
     if(ok){
       spawnP(o.x,LY[o.lane]-oh/2,'#FFD700',12);
       if(o.type==='b'){const tys=['livro','escudo','estrela'];its.push({x:o.x,lane:o.lane,type:tys[Math.floor(Math.random()*tys.length)],phase:0});}
@@ -373,7 +383,7 @@ function update(){
 
   itmT++;
   if(itmT>=itmI&&clearToSpawn&&Math.random()<0.35){
-    const tys=['livro','escudo','estrela','estrela'];
+    const tys=['livro','livro','escudo','estrela'];
     its.push({x:W+60,lane:Math.floor(Math.random()*LC),
       type:tys[Math.floor(Math.random()*tys.length)],phase:Math.random()*Math.PI*2});
     itmT=0;itmI=Math.max(90,itmI-.30);  // Itens menos frequentes
@@ -399,6 +409,7 @@ function update(){
   if(pl.hitT>0)pl.hitT--;
   if(flashT>0)flashT--;else flash=false;
   if(shield&&--shT<=0)shield=false;
+  if(starMode&&--starT<=0)starMode=false;
 
   for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd;if(obs[i].x<-90)obs.splice(i,1);}
   for(let i=its.length-1;i>=0;i--){its[i].x-=spd;if(its[i].x<-50)its.splice(i,1);}
