@@ -327,6 +327,7 @@ function checkCols(){
   // Obstacles
   for(let i=obs.length-1;i>=0;i--){
     const o=obs[i];
+    if(o.lane!==pl.lane)continue;
     const[ow,oh]=OS[o.type];
     const ox=o.x-ow/2+6,oy=LY[o.lane]-oh+6;
     if(!overlap(px,py,pw,ph,ox,oy,ow-12,oh-12))continue;
