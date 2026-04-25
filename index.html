@@ -57,7 +57,7 @@ const CTL_H  = H - CTL_Y;  // 88px
 // ── LANE CONFIG ── ajuste aqui quando os assets chegarem ──────────────────
 const LANE = {
   y:     [430, 499, 575],  // Y dos pés por lane — calculado da imagem bg_chao (128px: y=20,58,100 → escala 1.8125)
-  px:    [ 72,  90, 108],  // X do personagem por lane (perspectiva: longe → perto)
+  px:    [ 47,  65,  83],  // X do personagem por lane (perspectiva: longe → perto)
   roadY: 380,              // Y onde a estrada começa (topo do bloco único de chão)
 };
 const LY = LANE.y; // alias — restante do código não precisa mudar
@@ -68,7 +68,7 @@ const FLOOR_SPD = 0.65;   // velocidade do piso
 const BG_SPD   = 475/36000; // fundo revela exatamente ao chegar em 600km
 
 // Player
-const PW=58, PH=74;
+const PW=74, PH=94;
 const JVY=-13, GR=0.7;   // jump velocity, gravity
 
 // Obstacle [width, height]
