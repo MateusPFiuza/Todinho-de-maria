@@ -185,8 +185,9 @@ function drawPlayer(){
     ctx.restore();
   }
   if(starMode){
-    ctx.save();ctx.globalAlpha=0.5+0.45*Math.abs(Math.sin(Date.now()/70));
-    ctx.fillStyle='#FFD700';ctx.fillRect(dx,dy,PW,PH);
+    ctx.save();ctx.globalAlpha=0.2+0.2*Math.abs(Math.sin(Date.now()/70));
+    ctx.fillStyle='#FFD700';
+    ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 }
