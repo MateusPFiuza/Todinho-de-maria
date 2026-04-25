@@ -281,7 +281,7 @@ function drawHUD(){
   for(let i=0;i<3;i++){
     ctx.fillStyle=i<pl.lives?'#E53935':'rgba(255,255,255,0.18)';
     ctx.font='22px Arial';ctx.textAlign='right';
-    ctx.fillText('♥',W-58-i*26,38);
+    ctx.fillText('♥',W-78-i*26,38);
   }
   // Botão pause
   ctx.fillStyle='rgba(255,215,0,0.4)';ctx.lineWidth=1.5;ctx.strokeStyle='#FFD700';
@@ -299,11 +299,11 @@ function drawItemEffects(){
   ctx.save();ctx.textAlign='center';ctx.font='bold 16px Arial';
   if(speedBoost?.active){
     ctx.fillStyle='rgba(255,152,0,0.18)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#FF9800';ctx.fillText('⚡ ACELERADO',W/2,ty);
+    ctx.fillStyle='#CC4400';ctx.fillText('⚡ ACELERADO',W/2,ty);
   }
   if(shield){
     ctx.fillStyle='rgba(0,191,255,0.15)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#00BFFF';ctx.fillText('🛡 ESCUDO ATIVO',W/2,speedBoost?.active?ty+20:ty);
+    ctx.fillStyle='#005C8A';ctx.fillText('🛡 ESCUDO ATIVO',W/2,speedBoost?.active?ty+20:ty);
   }
   ctx.restore();
 }
@@ -335,7 +335,9 @@ function checkCols(){
     if(o.type==='b')ok=pl.attacking;
     if(o.type==='c')ok=o.lane!==pl.lane;
     if(ok){
-      spawnP(o.x,LY[o.lane]-oh/2,'#FFD700',12);obs.splice(i,1);
+      spawnP(o.x,LY[o.lane]-oh/2,'#FFD700',12);
+      if(o.type==='b'){const tys=['livro','escudo','estrela'];its.push({x:o.x,lane:o.lane,type:tys[Math.floor(Math.random()*tys.length)],phase:0});}
+      obs.splice(i,1);
     } else if(shield){
       shield=false;shT=0;spawnP(pl.x,pl.y+PH/2,'#00BFFF',12);obs.splice(i,1);
     } else {
