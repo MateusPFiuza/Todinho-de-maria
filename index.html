@@ -335,7 +335,7 @@ function checkCols(){
     if(it.lane!==pl.lane)continue;
     const ix=it.x-IW/2,iy=LY[it.lane]-IH-16;
     if(overlap(px,py,pw,ph,ix,iy,IW,IH)){
-      if(it.type==='livro'){if(pl.lives<3){pl.lives++;spawnP(it.x,iy+IH/2,'#E53935',10);}toast='Vida nova';toastT=90;}
+      if(it.type==='livro'){if(pl.lives<3){pl.lives++;spawnP(it.x,iy+IH/2,'#E53935',10);}toast='📖 Vida nova';toastT=90;}
       if(it.type==='estrela'){starMode=true;starT=360;spawnP(it.x,iy+IH/2,'#FFD700',16);}  // Limpa todos obstáculos na tela
       if(it.type==='escudo'){shield=true;shT=300;spawnP(it.x,iy+IH/2,'#4CAF50',12);}
       its.splice(i,1);
@@ -393,7 +393,7 @@ function update(){
 
   itmT++;
   if(!starMode&&itmT>=itmI&&clearToSpawn&&Math.random()<0.35){
-    const tys=['escudo','estrela','livro'];
+    const tys=['escudo','escudo','livro','estrela'];
     if(pl.lives===1)tys.push('livro');
     its.push({x:W+60,lane:Math.floor(Math.random()*LC),
       type:tys[Math.floor(Math.random()*tys.length)],phase:Math.random()*Math.PI*2});
