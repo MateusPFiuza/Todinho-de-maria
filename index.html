@@ -379,7 +379,7 @@ function update(){
   if(score>=600){state=ST.WIN;return;}
   
   // Base speed + speed boost
-  let baseSpd=6.5+Math.min(dist/9000,3);
+  let baseSpd=6.5+Math.min(dist/6000,5);
   spd=speedBoost.active ? baseSpd*1.4 : baseSpd;  // 40% mais rápido com boost
 
   // Distância mínima entre qualquer objeto e a borda direita antes de spawnar
