@@ -94,7 +94,7 @@ let paused=false;
 let menu_btns={};  // buttons for menu and help screens
 let game_btns={};  // buttons for game screens
 
-const bgm=new Audio('assets/soundtrack/Brasil.mp3');
+const bgm=new Audio('assets/soundtrack/brasil.mp3');
 bgm.loop=true;bgm.volume=0.5;
 function bgmPlay(){bgm.pause();bgm.currentTime=0;bgm.play().catch(()=>{});}
 function bgmStop(){bgm.pause();bgm.currentTime=0;}
