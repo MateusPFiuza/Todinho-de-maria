@@ -392,12 +392,13 @@ function update(){
   const GAP=220;
   let rightmost=-Infinity;
   for(const o of obs)if(o.x>rightmost)rightmost=o.x;
-  const obsCanSpawn=starMode?rightmost<W-100:rightmost<W-GAP;
+  const starActive=starMode&&starT>80;
+  const obsCanSpawn=starActive?rightmost<W-100:rightmost<W-GAP;
   for(const i of its)if(i.x>rightmost)rightmost=i.x;
   const clearToSpawn=rightmost<W-GAP;
 
   obsT++;
-  if(obsT>=(starMode?25:obsI)&&obsCanSpawn){
+  if(obsT>=(starActive?25:obsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
   }
