@@ -94,6 +94,11 @@ let paused=false;
 let menu_btns={};  // buttons for menu and help screens
 let game_btns={};  // buttons for game screens
 
+const bgm=new Audio('assets/soundtrack/Brasil.mp3');
+bgm.loop=true;bgm.volume=0.5;
+function bgmPlay(){bgm.pause();bgm.currentTime=0;bgm.play().catch(()=>{});}
+function bgmStop(){bgm.pause();bgm.currentTime=0;}
+
 function init(){
   score=0;dist=0;spd=5.2;  // score será calculado de dist em km
   obsT=0;obsI=90;    // obstáculos
@@ -366,7 +371,7 @@ function checkCols(){
     } else {
       pl.lives--;pl.hitT=44;flash=true;flashT=18;
       spawnP(pl.x,pl.y+PH/2,'#F44336',10);obs.splice(i,1);
-      if(pl.lives<=0){pl.dead=true;setTimeout(()=>state=ST.OVER,900);}
+      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>state=ST.OVER,900);}
     }
   }
 }
@@ -376,7 +381,7 @@ function update(){
   if(state!==ST.PLAY||pl.dead)return;
   bgOff+=spd;dist+=spd;
   score=dist/60;
-  if(score>=600){state=ST.WIN;return;}
+  if(score>=600){state=ST.WIN;bgmStop();return;}
   
   // Base speed + speed boost
   let baseSpd=6.5+Math.min(dist/6000,5);
@@ -611,9 +616,9 @@ function doAtk() {if(!pl.attacking){pl.attacking=true;pl.atT=24;}}
 
 function togglePause(){
   if(state===ST.PLAY){
-    state=ST.PAUSED;
+    state=ST.PAUSED;bgm.pause();
   } else if(state===ST.PAUSED){
-    state=ST.PLAY;
+    state=ST.PLAY;bgm.play().catch(()=>{});
   }
 }
 
@@ -624,7 +629,7 @@ function toC(cx,cy){const r=cv.getBoundingClientRect();return{x:(cx-r.left)*W/r.
 function handleMenuClick(c){
   if(menu_btns.play&&hitBtn(menu_btns.play,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    init();state=ST.PLAY;return;
+    init();state=ST.PLAY;bgmPlay();return;
   }
   if(menu_btns.help&&hitBtn(menu_btns.help,c.x,c.y)){
     state=ST.HELP;return;
@@ -645,18 +650,18 @@ function handleGameClick(c){
 
 function handlePausedClick(c){
   if(game_btns.resume&&hitBtn(game_btns.resume,c.x,c.y)){
-    state=ST.PLAY;return;
+    state=ST.PLAY;bgm.play().catch(()=>{});return;
   }
   if(game_btns.pauseMenu&&hitBtn(game_btns.pauseMenu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    state=ST.MENU;return;
+    state=ST.MENU;bgmStop();return;
   }
 }
 
 function handleGameOverClick(c){
   if(game_btns.restart&&hitBtn(game_btns.restart,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    init();state=ST.PLAY;return;
+    init();state=ST.PLAY;bgmPlay();return;
   }
   if(game_btns.menu&&hitBtn(game_btns.menu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
@@ -733,7 +738,7 @@ document.addEventListener('keydown',e=>{
   if(state===ST.MENU){
     if(e.key===' '||e.key==='Enter'){
       if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-      init();state=ST.PLAY;
+      init();state=ST.PLAY;bgmPlay();
     }
     e.preventDefault();return;
   }
