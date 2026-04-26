@@ -255,7 +255,12 @@ function spawnP(x,y,c,n=8){
   }
 }
 function updP(){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.life-=.04;if(p.life<=0)parts.splice(i,1);}}
-function drawP(){for(const p of parts){ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();}}
+function drawP(){
+  if(!parts.length)return;
+  ctx.save();
+  for(const p of parts){ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+}
 
 /* ── CONTROLS UI ─────────────────────────── */
 function drawCtl(){
@@ -379,13 +384,13 @@ function update(){
 
   // Distância mínima entre qualquer objeto e a borda direita antes de spawnar
   const GAP=220;
-  const rightmost=[...obs.map(o=>o.x),...its.map(i=>i.x)].reduce((a,b)=>Math.max(a,b),-Infinity);
+  let rightmost=-Infinity;
+  for(const o of obs)if(o.x>rightmost)rightmost=o.x;
+  const obsCanSpawn=starMode?rightmost<W-100:rightmost<W-GAP;
+  for(const i of its)if(i.x>rightmost)rightmost=i.x;
   const clearToSpawn=rightmost<W-GAP;
 
   obsT++;
-  const obsCanSpawn=starMode
-    ?obs.reduce((m,o)=>Math.max(m,o.x),-Infinity)<W-100
-    :clearToSpawn;
   if(obsT>=(starMode?25:obsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
