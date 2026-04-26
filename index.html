@@ -40,6 +40,7 @@ const SRCS={
   is:'assets/items/item_estrela.png',
   bf:'assets/backgrounds/bg_chao.png',
   bc:'assets/backgrounds/bg_cenario.png',
+  t1:'assets/telas/tela_1.png',
 };
 const TOTAL=Object.keys(SRCS).length;
 for(const[k,v]of Object.entries(SRCS)){
@@ -440,53 +441,18 @@ function update(){
 
 /* ── SCREENS ─────────────────────────────── */
 function drawMenu(){
-  const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1a3a5c');
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(10,20,60,0.7)';drawBasilica(W*0.62,70);
-
-  ctx.fillStyle='rgba(5,5,20,0.8)';
-  ctx.beginPath();ctx.roundRect(28,118,W-56,520,24);ctx.fill();
-
-  ctx.textAlign='center';
-  ctx.fillStyle='#FFD700';ctx.font='bold 42px Arial';ctx.fillText('TODINHO',W/2,204);
-  ctx.fillStyle='#fff';ctx.font='bold 24px Arial';ctx.fillText('DE MARIA',W/2,240);
-  ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='13px Arial';
-  ctx.fillText('Basílica de Aparecida',W/2,264);
-
-  // Mini tips
-  const ctrls=[['▲ ▼','Trocar de lane (cima/baixo)'],['PULO','Pular buracos (tipo A)'],['ATAQUE','Destruir barreiras (tipo B)']];
-  ctrls.forEach(([k,v],i)=>{
-    ctx.fillStyle='#FFD700';ctx.font='bold 12px Arial';ctx.textAlign='right';
-    ctx.fillText(k,W/2-6,304+i*28);
-    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='12px Arial';ctx.textAlign='left';
-    ctx.fillText(v,W/2+8,304+i*28);
-  });
-
-  ctx.textAlign='center';ctx.font='12px Arial';
-  [['📖 +❤','#E53935'],['🛡 Escudo','#4CAF50'],['⭐ +100','#FFD700']].forEach(([t,c],i)=>{
-    ctx.fillStyle=c;ctx.fillText(t,72+i*128,400);
-  });
-
-  // Buttons
-  const playP=.92+.08*Math.sin(Date.now()/360);
-  ctx.save();ctx.translate(W/2,462);ctx.scale(playP,playP);
-  ctx.fillStyle='#FFD700';ctx.beginPath();ctx.roundRect(-95,-24,190,48,24);ctx.fill();
-  ctx.fillStyle='#1a0a2e';ctx.font='bold 18px Arial';ctx.textAlign='center';
-  ctx.fillText('INICIAR JOGO',0,8);ctx.restore();
-  menu_btns.play={x:W/2-95,y:438,w:190,h:48};
-
-  // Help button
-  ctx.fillStyle='rgba(255,215,0,0.3)';ctx.lineWidth=2;ctx.strokeStyle='#FFD700';
-  ctx.beginPath();ctx.roundRect(W/2-85,495,170,40,16);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#FFD700';ctx.font='bold 16px Arial';ctx.textAlign='center';
-  ctx.fillText('? COMO JOGAR',W/2,520);
-  menu_btns.help={x:W/2-85,y:495,w:170,h:40};
-
-  if(hs>0){
-    ctx.fillStyle='rgba(255,215,0,.75)';ctx.font='13px Arial';ctx.textAlign='center';
-    ctx.fillText('Recorde: '+Math.floor(hs),W/2,550);
+  if(rdy('t1')){
+    ctx.drawImage(IMG.t1,0,0,W,H);
+  } else {
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1a3a5c');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#FFD700';ctx.font='bold 36px Arial';ctx.textAlign='center';
+    ctx.fillText('TODINHO DE MARIA',W/2,H/2-20);
+    ctx.fillStyle='#fff';ctx.font='bold 20px Arial';
+    ctx.fillText('INICIAR',W/2,H/2+40);
   }
+  menu_btns.play={x:50,y:620,w:300,h:65};
 }
 
 /* ── HELP SCREEN ─────────────────────────────────────────── */
@@ -630,9 +596,6 @@ function handleMenuClick(c){
   if(menu_btns.play&&hitBtn(menu_btns.play,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
     init();state=ST.PLAY;bgmPlay();return;
-  }
-  if(menu_btns.help&&hitBtn(menu_btns.help,c.x,c.y)){
-    state=ST.HELP;return;
   }
 }
 
