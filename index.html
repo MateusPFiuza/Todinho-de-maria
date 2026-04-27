@@ -94,6 +94,7 @@ let hs=+localStorage.getItem('tdm_hs')||0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};  // speed boost from livro item
+let lastTime=0,dt=1;
 let paused=false;
 let menu_btns={};
 let game_btns={};
@@ -265,7 +266,7 @@ function spawnP(x,y,c,n=8){
     parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,r:3+Math.random()*4,c,life:1});
   }
 }
-function updP(){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.life-=.04;if(p.life<=0)parts.splice(i,1);}}
+function updP(){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.2*dt;p.life-=.04*dt;if(p.life<=0)parts.splice(i,1);}}
 function drawP(){
   if(!parts.length)return;
   ctx.save();
@@ -385,7 +386,7 @@ function checkCols(){
 /* ── UPDATE ──────────────────────────────── */
 function update(){
   if(state!==ST.PLAY||pl.dead)return;
-  bgOff+=spd;dist+=spd;
+  bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
   if(score>=600){state=ST.WIN;bgmStop();return;}
   
@@ -402,13 +403,13 @@ function update(){
   for(const i of its)if(i.x>rightmost)rightmost=i.x;
   const clearToSpawn=rightmost<W-GAP;
 
-  obsT++;
+  obsT+=dt;
   if(obsT>=(starActive?25:obsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
   }
 
-  itmT++;
+  itmT+=dt;
   if(!starMode&&itmT>=itmI&&clearToSpawn&&Math.random()<0.35){
     const tys=['escudo','escudo','livro','estrela'];
     if(pl.lives===1)tys.push('livro');
@@ -419,29 +420,30 @@ function update(){
   
   // Update speed boost
   if(speedBoost.active){
-    speedBoost.duration--;
+    speedBoost.duration-=dt;
     if(speedBoost.duration<=0)speedBoost.active=false;
   }
 
-  // Smooth lane Y + perspectiva X
-  pl.y+=(LY[pl.lane]-PH-pl.y)*.18;
-  pl.x+=(LANE.px[pl.lane]-pl.x)*.18;
+  // Smooth lane Y + perspectiva X (dt-aware lerp)
+  const lf=1-Math.pow(0.82,dt);
+  pl.y+=(LY[pl.lane]-PH-pl.y)*lf;
+  pl.x+=(LANE.px[pl.lane]-pl.x)*lf;
 
   // Jump physics
   if(pl.jumping){
-    pl.jOff+=pl.vy;pl.vy+=GR;
+    pl.jOff+=pl.vy*dt;pl.vy+=GR*dt;
     if(pl.jOff>=0){pl.jOff=0;pl.vy=0;pl.jumping=false;}
   }
 
-  if(pl.atT>0){pl.atT--;if(!pl.atT)pl.attacking=false;}
-  if(pl.hitT>0)pl.hitT--;
-  if(flashT>0)flashT--;else flash=false;
-  if(shield&&--shT<=0)shield=false;
-  if(starMode&&--starT<=0)starMode=false;
-  if(toastT>0)toastT--;
+  if(pl.atT>0){pl.atT-=dt;if(pl.atT<=0){pl.atT=0;pl.attacking=false;}}
+  if(pl.hitT>0){pl.hitT-=dt;if(pl.hitT<0)pl.hitT=0;}
+  if(flashT>0){flashT-=dt;if(flashT<=0){flashT=0;flash=false;}}
+  if(shield&&(shT-=dt)<=0)shield=false;
+  if(starMode&&(starT-=dt)<=0)starMode=false;
+  if(toastT>0){toastT-=dt;if(toastT<0)toastT=0;}
 
-  for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd;if(obs[i].x<-90)obs.splice(i,1);}
-  for(let i=its.length-1;i>=0;i--){its[i].x-=spd;if(its[i].x<-50)its.splice(i,1);}
+  for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd*dt;if(obs[i].x<-90)obs.splice(i,1);}
+  for(let i=its.length-1;i>=0;i--){its[i].x-=spd*dt;if(its[i].x<-50)its.splice(i,1);}
   checkCols();updP();
 }
 
@@ -800,7 +802,9 @@ document.addEventListener('keydown',e=>{
 /* ── FLOW ────────────────────────────────── */
 
 /* ── MAIN LOOP ───────────────────────────── */
-function frame(){
+function frame(ts){
+  dt=lastTime?Math.min((ts-lastTime)/(1000/60),2.5):1;
+  lastTime=ts;
   ctx.clearRect(0,0,W,H);
   
   if(state===ST.MENU){
