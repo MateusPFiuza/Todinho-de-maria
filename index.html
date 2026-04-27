@@ -94,6 +94,7 @@ let hs=+localStorage.getItem('tdm_hs')||0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};  // speed boost from livro item
+let lastTime=0,dt=1;
 let paused=false;
 let menu_btns={};
 let game_btns={};
@@ -265,7 +266,7 @@ function spawnP(x,y,c,n=8){
     parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,r:3+Math.random()*4,c,life:1});
   }
 }
-function updP(){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.life-=.04;if(p.life<=0)parts.splice(i,1);}}
+function updP(){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.2*dt;p.life-=.04*dt;if(p.life<=0)parts.splice(i,1);}}
 function drawP(){
   if(!parts.length)return;
   ctx.save();
@@ -301,7 +302,7 @@ function drawHUD(){
   ctx.fillText('🛣 '+Math.floor(score)+' km',14,38);
   // Corações (sem label "Vidas")
   for(let i=0;i<3;i++){
-    ctx.fillStyle=i<pl.lives?'#E53935':'rgba(255,255,255,0.18)';
+    ctx.fillStyle=i<pl.lives?'#E53935':'rgba(180,0,0,0.28)';
     ctx.font="15px 'Press Start 2P'";ctx.textAlign='right';
     ctx.fillText('♥',W-78-i*26,38);
   }
@@ -374,6 +375,8 @@ function checkCols(){
       obs.splice(i,1);
     } else if(shield){
       shield=false;shT=0;spawnP(pl.x,pl.y+PH/2,'#00BFFF',12);obs.splice(i,1);
+    } else if(pl.hitT>0){
+      obs.splice(i,1); // invencível — remove obstáculo sem dano
     } else {
       pl.lives--;pl.hitT=44;flash=true;flashT=18;
       spawnP(pl.x,pl.y+PH/2,'#F44336',10);obs.splice(i,1);
@@ -385,7 +388,7 @@ function checkCols(){
 /* ── UPDATE ──────────────────────────────── */
 function update(){
   if(state!==ST.PLAY||pl.dead)return;
-  bgOff+=spd;dist+=spd;
+  bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
   if(score>=600){state=ST.WIN;bgmStop();return;}
   
@@ -402,13 +405,13 @@ function update(){
   for(const i of its)if(i.x>rightmost)rightmost=i.x;
   const clearToSpawn=rightmost<W-GAP;
 
-  obsT++;
+  obsT+=dt;
   if(obsT>=(starActive?25:obsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
   }
 
-  itmT++;
+  itmT+=dt;
   if(!starMode&&itmT>=itmI&&clearToSpawn&&Math.random()<0.35){
     const tys=['escudo','escudo','livro','estrela'];
     if(pl.lives===1)tys.push('livro');
@@ -419,29 +422,30 @@ function update(){
   
   // Update speed boost
   if(speedBoost.active){
-    speedBoost.duration--;
+    speedBoost.duration-=dt;
     if(speedBoost.duration<=0)speedBoost.active=false;
   }
 
-  // Smooth lane Y + perspectiva X
-  pl.y+=(LY[pl.lane]-PH-pl.y)*.18;
-  pl.x+=(LANE.px[pl.lane]-pl.x)*.18;
+  // Smooth lane Y + perspectiva X (dt-aware lerp)
+  const lf=1-Math.pow(0.82,dt);
+  pl.y+=(LY[pl.lane]-PH-pl.y)*lf;
+  pl.x+=(LANE.px[pl.lane]-pl.x)*lf;
 
   // Jump physics
   if(pl.jumping){
-    pl.jOff+=pl.vy;pl.vy+=GR;
+    pl.jOff+=pl.vy*dt;pl.vy+=GR*dt;
     if(pl.jOff>=0){pl.jOff=0;pl.vy=0;pl.jumping=false;}
   }
 
-  if(pl.atT>0){pl.atT--;if(!pl.atT)pl.attacking=false;}
-  if(pl.hitT>0)pl.hitT--;
-  if(flashT>0)flashT--;else flash=false;
-  if(shield&&--shT<=0)shield=false;
-  if(starMode&&--starT<=0)starMode=false;
-  if(toastT>0)toastT--;
+  if(pl.atT>0){pl.atT-=dt;if(pl.atT<=0){pl.atT=0;pl.attacking=false;}}
+  if(pl.hitT>0){pl.hitT-=dt;if(pl.hitT<0)pl.hitT=0;}
+  if(flashT>0){flashT-=dt;if(flashT<=0){flashT=0;flash=false;}}
+  if(shield&&(shT-=dt)<=0)shield=false;
+  if(starMode&&(starT-=dt)<=0)starMode=false;
+  if(toastT>0){toastT-=dt;if(toastT<0)toastT=0;}
 
-  for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd;if(obs[i].x<-90)obs.splice(i,1);}
-  for(let i=its.length-1;i>=0;i--){its[i].x-=spd;if(its[i].x<-50)its.splice(i,1);}
+  for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd*dt;if(obs[i].x<-90)obs.splice(i,1);}
+  for(let i=its.length-1;i>=0;i--){its[i].x-=spd*dt;if(its[i].x<-50)its.splice(i,1);}
   checkCols();updP();
 }
 
@@ -482,33 +486,40 @@ function drawIntro(){
   ctx.fillStyle='#F5E6C8';ctx.beginPath();ctx.roundRect(rx,ry,rw,rh,18);ctx.fill();
 
   ctx.textAlign='center';
-  if(introSlide===0){
-    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";ctx.fillText('Ajude o',W/2,ry+85);
-    ctx.fillStyle='#CC0000';ctx.font="24px 'Press Start 2P'";ctx.fillText('Todinho',W/2,ry+134);
-    ctx.fillStyle='#0033BB';ctx.font="21px 'Press Start 2P'";ctx.fillText('DE MARIA',W/2,ry+176);
-    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";
-    ctx.fillText('a completar',W/2,ry+222);
-    ctx.fillText('a peregrinação',W/2,ry+252);
-    ctx.fillText('pelos países',W/2,ry+282);
-  } else {
-    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";ctx.fillText('Como jogar:',W/2,ry+75);
-    ctx.font="12px 'Press Start 2P'";
-    const tips=[
-      '👆  Toque para pular',
-      '↕  Arraste para cima e para baixo',
-      '     para mudar de faixa',
-      '👉  Arraste para o lado',
-      '     para quebrar caixas',
-    ];
-    tips.forEach((t,i)=>ctx.fillText(t,W/2,ry+120+i*(i===2||i===4?22:36)));
 
-    const bx=W/2-110,by=ry+rh-72,bw=220,bh=46;
+  // Clip no retângulo — nada vaza
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(rx,ry,rw,rh,18);ctx.clip();
+
+  if(introSlide===0){
+    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";ctx.fillText('Ajude o',W/2,ry+72);
+    ctx.fillStyle='#CC0000';ctx.font="24px 'Press Start 2P'";ctx.fillText('Todinho',W/2,ry+105);
+    ctx.fillStyle='#0033BB';ctx.font="21px 'Press Start 2P'";ctx.fillText('DE MARIA',W/2,ry+138);
+    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";
+    ctx.fillText('a completar',W/2,ry+182);
+    ctx.fillText('a peregrinação',W/2,ry+207);
+    ctx.fillText('pelos países',W/2,ry+232);
+  } else {
+    ctx.fillStyle='#2B1000';ctx.font="13px 'Press Start 2P'";ctx.fillText('Como jogar:',W/2,ry+65);
+    ctx.font="9px 'Press Start 2P'";
+    const tips=[
+      ['👆 Toque para pular',      ry+110],
+      ['↕ Arraste p/ cima ou baixo', ry+148],
+      ['  para mudar de faixa',     ry+166],
+      ['👉 Arraste p/ o lado',      ry+204],
+      ['  para quebrar caixas',     ry+222],
+    ];
+    tips.forEach(([t,y])=>{ctx.fillStyle='#2B1000';ctx.fillText(t,W/2,y);});
+
+    const bx=W/2-110,by=ry+rh-70,bw=220,bh=46;
     ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(bx-3,by-3,bw+6,bh+6,24);ctx.fill();
     ctx.fillStyle='#FFB800';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,22);ctx.fill();
-    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";
-    ctx.fillText('INICIAR',W/2,by+bh/2+8);
+    ctx.fillStyle='#2B1000';ctx.font="12px 'Press Start 2P'";
+    ctx.fillText('INICIAR',W/2,by+bh/2+5);
     intro_btns.play={x:bx,y:by,w:bw,h:bh};
   }
+
+  ctx.restore(); // fim do clip
 
   // Dots dentro do retângulo
   const dotY=ry+rh-22;
@@ -793,7 +804,9 @@ document.addEventListener('keydown',e=>{
 /* ── FLOW ────────────────────────────────── */
 
 /* ── MAIN LOOP ───────────────────────────── */
-function frame(){
+function frame(ts){
+  dt=lastTime?Math.min((ts-lastTime)/(1000/60),2.5):1;
+  lastTime=ts;
   ctx.clearRect(0,0,W,H);
   
   if(state===ST.MENU){
