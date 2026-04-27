@@ -88,9 +88,15 @@ const B={
 };
 
 /* ── STATE ───────────────────────────────── */
-const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6};
+const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6,PHASE_INTRO:7};
+const PHASES=[
+  {num:1,name:'Brasil'},
+  {num:2,name:'Portugal'},
+  {num:3,name:'México'},
+];
 let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
+let phase=1,phaseIntroT=0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};  // speed boost from livro item
@@ -105,6 +111,7 @@ const bgm=new Audio('assets/soundtrack/brasil.mp3');
 bgm.loop=true;bgm.volume=0.5;
 function bgmPlay(){bgm.pause();bgm.currentTime=0;bgm.play().catch(()=>{});}
 function bgmStop(){bgm.pause();bgm.currentTime=0;}
+function startPhaseIntro(){phaseIntroT=0;bgmPlay();state=ST.PHASE_INTRO;}
 
 function init(){
   score=0;dist=0;spd=5.2;  // score será calculado de dist em km
@@ -380,7 +387,7 @@ function checkCols(){
     } else {
       pl.lives--;pl.hitT=44;flash=true;flashT=18;
       spawnP(pl.x,pl.y+PH/2,'#F44336',10);obs.splice(i,1);
-      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>state=ST.OVER,900);}
+      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>{init();startPhaseIntro();},1200);}
     }
   }
 }
@@ -390,7 +397,11 @@ function update(){
   if(state!==ST.PLAY||pl.dead)return;
   bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
-  if(score>=600){state=ST.WIN;bgmStop();return;}
+  if(score>=600){
+    if(phase<3){phase++;bgmStop();init();startPhaseIntro();}
+    else{state=ST.WIN;bgmStop();}
+    return;
+  }
   
   // Base speed + speed boost
   let baseSpd=6.5+Math.min(dist/6000,5);
@@ -532,8 +543,24 @@ function drawIntro(){
 function handleIntroClick(c){
   if(introSlide===0){introSlide=1;return;}
   if(intro_btns.play&&hitBtn(intro_btns.play,c.x,c.y)){
-    init();state=ST.PLAY;bgmPlay();
+    phase=1;init();startPhaseIntro();
   }
+}
+
+/* ── PHASE INTRO SCREEN ──────────────────────────────────── */
+function drawPhaseIntro(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  const ph=PHASES[phase-1];
+  ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,255,255,0.45)';ctx.font="13px 'Press Start 2P'";
+  ctx.fillText('FASE '+ph.num,W/2,H/2-38);
+  ctx.fillStyle='#FFD700';ctx.font="28px 'Press Start 2P'";
+  ctx.fillText(ph.name,W/2,H/2+16);
+  // barra de progresso simples
+  const bw=160,bh=6,bx=W/2-bw/2,by=H/2+54;
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,3);ctx.fill();
+  const prog=Math.min(phaseIntroT/120,1);
+  ctx.fillStyle='#FFD700';ctx.beginPath();ctx.roundRect(bx,by,bw*prog,bh,3);ctx.fill();
 }
 
 /* ── HELP SCREEN ─────────────────────────────────────────── */
@@ -614,11 +641,11 @@ function drawOver(){
 function drawWin(){
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
-  ctx.fillStyle='#FFD700';ctx.font="21px 'Press Start 2P'";ctx.fillText('🎉 PARABÉNS! 🎉',W/2,150);
-  ctx.fillStyle='#fff';ctx.font="14px 'Press Start 2P'";ctx.fillText('Você chegou à',W/2,202);
-  ctx.fillStyle='#FFD700';ctx.font="16px 'Press Start 2P'";ctx.fillText('Basílica de Aparecida!',W/2,238);
-  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font="10px 'Press Start 2P'";
-  ctx.fillText('600 km percorridos',W/2,278);
+  ctx.fillStyle='#FFD700';ctx.font="21px 'Press Start 2P'";ctx.fillText('🎉 PARABÉNS! 🎉',W/2,130);
+  ctx.fillStyle='#fff';ctx.font="11px 'Press Start 2P'";ctx.fillText('Você completou as',W/2,178);
+  ctx.fillStyle='#FFD700';ctx.font="13px 'Press Start 2P'";ctx.fillText('3 FASES da peregrinação!',W/2,210);
+  ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font="9px 'Press Start 2P'";
+  ctx.fillText('Brasil · Portugal · México',W/2,248);
   ctx.fillStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-100,320,200,50,20);ctx.fill();
   ctx.fillStyle='#1a0a2e';ctx.font="12px 'Press Start 2P'";ctx.fillText('JOGAR NOVAMENTE',W/2,350);
@@ -704,7 +731,7 @@ function handlePausedClick(c){
 function handleGameOverClick(c){
   if(game_btns.restart&&hitBtn(game_btns.restart,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    init();state=ST.PLAY;bgmPlay();return;
+    phase=1;init();startPhaseIntro();return;
   }
   if(game_btns.menu&&hitBtn(game_btns.menu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
@@ -719,13 +746,10 @@ cv.addEventListener('touchstart',e=>{
   
   // Handle menu/help clicks
   if(state===ST.MENU){handleMenuClick(c);sc=null;return;}
+  if(state===ST.PHASE_INTRO){sc=null;return;}
   if(state===ST.INTRO){handleIntroClick(c);sc=null;return;}
   if(state===ST.HELP){handleHelpClick(c);sc=null;return;}
-  
-  // Handle paused clicks
   if(state===ST.PAUSED){handlePausedClick(c);sc=null;return;}
-  
-  // Handle game over clicks
   if(state===ST.OVER){handleGameOverClick(c);sc=null;return;}
   if(state===ST.WIN){handleGameOverClick(c);sc=null;return;}
   
@@ -765,6 +789,7 @@ cv.addEventListener('click',e=>{
   const c={x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
   
   if(state===ST.MENU){handleMenuClick(c);return;}
+  if(state===ST.PHASE_INTRO)return;
   if(state===ST.INTRO){handleIntroClick(c);return;}
   if(state===ST.HELP){handleHelpClick(c);return;}
   if(state===ST.PAUSED){handlePausedClick(c);return;}
@@ -781,14 +806,11 @@ document.addEventListener('keydown',e=>{
   
   // Start game or other menu actions
   if(state===ST.MENU){
-    if(e.key===' '||e.key==='Enter'){
-      if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-      init();state=ST.PLAY;bgmPlay();
-    }
+    if(e.key===' '||e.key==='Enter'){introSlide=0;state=ST.INTRO;}
     e.preventDefault();return;
   }
-  
-  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER){
+
+  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER||state===ST.PHASE_INTRO){
     e.preventDefault();return;
   }
   
@@ -811,6 +833,10 @@ function frame(ts){
   
   if(state===ST.MENU){
     drawMenu();
+  } else if(state===ST.PHASE_INTRO){
+    drawPhaseIntro();
+    phaseIntroT+=dt;
+    if(phaseIntroT>=120){phaseIntroT=0;state=ST.PLAY;}
   } else if(state===ST.INTRO){
     drawIntro();
   } else if(state===ST.HELP){
