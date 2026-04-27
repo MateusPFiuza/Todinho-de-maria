@@ -85,15 +85,17 @@ const B={
 };
 
 /* ── STATE ───────────────────────────────── */
-const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5};
+const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6};
 let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};  // speed boost from livro item
 let paused=false;
-let menu_btns={};  // buttons for menu and help screens
-let game_btns={};  // buttons for game screens
+let menu_btns={};
+let game_btns={};
+let intro_btns={};
+let introSlide=0;
 
 const bgm=new Audio('assets/soundtrack/brasil.mp3');
 bgm.loop=true;bgm.volume=0.5;
@@ -456,6 +458,83 @@ function drawMenu(){
   menu_btns.play={x:50,y:620,w:300,h:65};
 }
 
+/* ── INTRO SLIDES ────────────────────────────────────────── */
+function drawChocoDrips(baseY){
+  ctx.fillStyle='#2A0A00';
+  [{x:30,w:32,h:48},{x:80,w:28,h:65},{x:132,w:36,h:40},{x:185,w:30,h:70},
+   {x:238,w:34,h:52},{x:292,w:28,h:60},{x:342,w:32,h:42},{x:382,w:24,h:35}
+  ].forEach(({x,w,h})=>{
+    ctx.beginPath();
+    ctx.moveTo(x-w/2,baseY);ctx.lineTo(x+w/2,baseY);
+    ctx.lineTo(x+w/2-4,baseY+h-10);
+    ctx.quadraticCurveTo(x,baseY+h+14,x-w/2+4,baseY+h-10);
+    ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.arc(x,baseY+h,w/2-5,0,Math.PI*2);ctx.fill();
+  });
+}
+
+function drawIntro(){
+  intro_btns={};
+  ctx.fillStyle='#1AACE8';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#2A0A00';ctx.fillRect(0,0,W,92);
+  drawChocoDrips(92);
+
+  const rx=28,ry=180,rw=W-56,rh=425;
+  // Gold border
+  ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(rx-5,ry-5,rw+10,rh+10,22);ctx.fill();
+  ctx.fillStyle='#F0A020';ctx.beginPath();ctx.roundRect(rx-3,ry-3,rw+6,rh+6,20);ctx.fill();
+  // Cream fill
+  ctx.fillStyle='#F5E6C8';ctx.beginPath();ctx.roundRect(rx,ry,rw,rh,18);ctx.fill();
+
+  // Jumping sprite sitting on rectangle top
+  const sw=88,sh=112;
+  if(rdy('pj')) ctx.drawImage(IMG.pj,W/2-sw/2,ry-sh*0.7,sw,sh);
+
+  ctx.textAlign='center';
+  if(introSlide===0){
+    ctx.fillStyle='#2B1000';ctx.font='bold 24px Arial';ctx.fillText('Ajude o',W/2,ry+98);
+    ctx.fillStyle='#CC0000';ctx.font='bold 44px Arial';ctx.fillText('Todinho',W/2,ry+148);
+    ctx.fillStyle='#0033BB';ctx.font='bold 36px Arial';ctx.fillText('DE MARIA',W/2,ry+190);
+    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';
+    ctx.fillText('a completar',W/2,ry+238);
+    ctx.fillText('a peregrinação',W/2,ry+268);
+    ctx.fillText('pelos países',W/2,ry+300);
+  } else {
+    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';ctx.fillText('Como jogar:',W/2,ry+85);
+    ctx.font='16px Arial';
+    const tips=[
+      '👆  Toque para pular',
+      '↕  Arraste para cima e para baixo',
+      '     para mudar de faixa',
+      '👉  Arraste para o lado',
+      '     para quebrar caixas',
+    ];
+    tips.forEach((t,i)=>ctx.fillText(t,W/2,ry+130+i*(i===2||i===4?22:36)));
+
+    // INICIAR button
+    const bx=W/2-110,by=ry+rh-62,bw=220,bh=46;
+    ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(bx-3,by-3,bw+6,bh+6,24);ctx.fill();
+    ctx.fillStyle='#FFB800';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,22);ctx.fill();
+    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';
+    ctx.fillText('INICIAR',W/2,by+bh/2+8);
+    intro_btns.play={x:bx,y:by,w:bw,h:bh};
+  }
+
+  // Pagination dots
+  const dotY=ry+rh+26;
+  [0,1].forEach(i=>{
+    ctx.beginPath();ctx.arc(W/2-14+i*28,dotY,8,0,Math.PI*2);
+    ctx.fillStyle=i===introSlide?'#D4860A':'rgba(255,255,255,0.55)';ctx.fill();
+  });
+}
+
+function handleIntroClick(c){
+  if(introSlide===0){introSlide=1;return;}
+  if(intro_btns.play&&hitBtn(intro_btns.play,c.x,c.y)){
+    init();state=ST.PLAY;bgmPlay();
+  }
+}
+
 /* ── HELP SCREEN ─────────────────────────────────────────── */
 function drawHelp(){
   const g=ctx.createLinearGradient(0,0,0,H);
@@ -595,8 +674,7 @@ function toC(cx,cy){const r=cv.getBoundingClientRect();return{x:(cx-r.left)*W/r.
 /* ── HANDLE BUTTON CLICKS BY SCREEN ──────────────────────── */
 function handleMenuClick(c){
   if(menu_btns.play&&hitBtn(menu_btns.play,c.x,c.y)){
-    if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    init();state=ST.PLAY;bgmPlay();return;
+    introSlide=0;state=ST.INTRO;return;
   }
 }
 
@@ -640,6 +718,7 @@ cv.addEventListener('touchstart',e=>{
   
   // Handle menu/help clicks
   if(state===ST.MENU){handleMenuClick(c);sc=null;return;}
+  if(state===ST.INTRO){handleIntroClick(c);sc=null;return;}
   if(state===ST.HELP){handleHelpClick(c);sc=null;return;}
   
   // Handle paused clicks
@@ -685,6 +764,7 @@ cv.addEventListener('click',e=>{
   const c={x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
   
   if(state===ST.MENU){handleMenuClick(c);return;}
+  if(state===ST.INTRO){handleIntroClick(c);return;}
   if(state===ST.HELP){handleHelpClick(c);return;}
   if(state===ST.PAUSED){handlePausedClick(c);return;}
   if(state===ST.OVER){handleGameOverClick(c);return;}
@@ -707,7 +787,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();return;
   }
   
-  if(state===ST.HELP||state===ST.PAUSED||state===ST.OVER){
+  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER){
     e.preventDefault();return;
   }
   
@@ -728,6 +808,8 @@ function frame(){
   
   if(state===ST.MENU){
     drawMenu();
+  } else if(state===ST.INTRO){
+    drawIntro();
   } else if(state===ST.HELP){
     drawHelp();
   } else if(state===ST.PAUSED){
