@@ -4,6 +4,9 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
   <title>Todinho de Maria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:#0d1b2a;display:flex;justify-content:center;align-items:center;
@@ -221,7 +224,7 @@ function drawObs(o){
       ctx.fillStyle='#607D8B';ctx.fillRect(ox,oy,ow,oh);
       ctx.fillStyle='#FFD600';ctx.beginPath();ctx.arc(o.x,oy,ow/2+5,0,Math.PI*2);ctx.fill();
     }
-    ctx.fillStyle='#fff';ctx.font='bold 10px Arial';ctx.textAlign='center';
+    ctx.fillStyle='#fff';ctx.font="6px 'Press Start 2P'";ctx.textAlign='center';
     ctx.fillText(OHINTS[o.type],o.x,oy-5);
   }
 }
@@ -281,7 +284,7 @@ function drawCtl(){
     ctx.lineWidth=2;
     ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,12);ctx.fill();ctx.stroke();
     ctx.fillStyle=active?'#111':'#fff';
-    ctx.font='bold 14px Arial';ctx.textAlign='center';
+    ctx.font="7px 'Press Start 2P'";ctx.textAlign='center';
     ctx.fillText(lbl,b.x+b.w/2,b.y+b.h/2+5);
   };
   btn(B.u,'▲','#FFD700',false);
@@ -294,18 +297,18 @@ function drawCtl(){
 function drawHUD(){
   ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(0,0,W,HUD_H);
   // Distância (km)
-  ctx.fillStyle='#FFD700';ctx.font='bold 22px Arial';ctx.textAlign='left';
+  ctx.fillStyle='#FFD700';ctx.font="10px 'Press Start 2P'";ctx.textAlign='left';
   ctx.fillText('🛣 '+Math.floor(score)+' km',14,38);
   // Corações (sem label "Vidas")
   for(let i=0;i<3;i++){
     ctx.fillStyle=i<pl.lives?'#E53935':'rgba(255,255,255,0.18)';
-    ctx.font='22px Arial';ctx.textAlign='right';
+    ctx.font="10px 'Press Start 2P'";ctx.textAlign='right';
     ctx.fillText('♥',W-78-i*26,38);
   }
   // Botão pause
   ctx.fillStyle='rgba(255,215,0,0.4)';ctx.lineWidth=1.5;ctx.strokeStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W-50,8,44,40,8);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#FFD700';ctx.font='bold 18px Arial';ctx.textAlign='center';
+  ctx.fillStyle='#FFD700';ctx.font="8px 'Press Start 2P'";ctx.textAlign='center';
   ctx.fillText('⏸',W-28,32);
   game_btns.pause={x:W-50,y:8,w:44,h:40};
   if(flash){ctx.fillStyle='rgba(255,0,0,0.3)';ctx.fillRect(0,0,W,H);}
@@ -314,14 +317,14 @@ function drawHUD(){
 // Efeitos de item sobrepostos ao jogo (não no HUD)
 function drawItemEffects(){
   if(toastT>0){
-    ctx.save();ctx.textAlign='center';ctx.font='bold 18px Arial';
+    ctx.save();ctx.textAlign='center';ctx.font="8px 'Press Start 2P'";
     ctx.globalAlpha=Math.min(1,toastT/20);
     ctx.fillStyle='#7A0000';ctx.fillText(toast,W/2,HUD_H+75);
     ctx.restore();
   }
   if(!speedBoost?.active&&!shield&&!starMode)return;
   const ty=HUD_H+36;
-  ctx.save();ctx.textAlign='center';ctx.font='bold 16px Arial';
+  ctx.save();ctx.textAlign='center';ctx.font="8px 'Press Start 2P'";
   let yOff=0;
   if(speedBoost?.active){
     ctx.fillStyle='rgba(255,152,0,0.18)';ctx.fillRect(0,HUD_H,W,50);
@@ -450,9 +453,9 @@ function drawMenu(){
     const g=ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1a3a5c');
     ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#FFD700';ctx.font='bold 36px Arial';ctx.textAlign='center';
+    ctx.fillStyle='#FFD700';ctx.font="14px 'Press Start 2P'";ctx.textAlign='center';
     ctx.fillText('TODINHO DE MARIA',W/2,H/2-20);
-    ctx.fillStyle='#fff';ctx.font='bold 20px Arial';
+    ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P'";
     ctx.fillText('INICIAR',W/2,H/2+40);
   }
   menu_btns.play={x:50,y:620,w:300,h:65};
@@ -480,16 +483,16 @@ function drawIntro(){
 
   ctx.textAlign='center';
   if(introSlide===0){
-    ctx.fillStyle='#2B1000';ctx.font='bold 24px Arial';ctx.fillText('Ajude o',W/2,ry+85);
-    ctx.fillStyle='#CC0000';ctx.font='bold 44px Arial';ctx.fillText('Todinho',W/2,ry+134);
-    ctx.fillStyle='#0033BB';ctx.font='bold 36px Arial';ctx.fillText('DE MARIA',W/2,ry+176);
-    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';
+    ctx.fillStyle='#2B1000';ctx.font="10px 'Press Start 2P'";ctx.fillText('Ajude o',W/2,ry+85);
+    ctx.fillStyle='#CC0000';ctx.font="16px 'Press Start 2P'";ctx.fillText('Todinho',W/2,ry+134);
+    ctx.fillStyle='#0033BB';ctx.font="14px 'Press Start 2P'";ctx.fillText('DE MARIA',W/2,ry+176);
+    ctx.fillStyle='#2B1000';ctx.font="10px 'Press Start 2P'";
     ctx.fillText('a completar',W/2,ry+222);
     ctx.fillText('a peregrinação',W/2,ry+252);
     ctx.fillText('pelos países',W/2,ry+282);
   } else {
-    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';ctx.fillText('Como jogar:',W/2,ry+75);
-    ctx.font='16px Arial';
+    ctx.fillStyle='#2B1000';ctx.font="10px 'Press Start 2P'";ctx.fillText('Como jogar:',W/2,ry+75);
+    ctx.font="8px 'Press Start 2P'";
     const tips=[
       '👆  Toque para pular',
       '↕  Arraste para cima e para baixo',
@@ -502,7 +505,7 @@ function drawIntro(){
     const bx=W/2-110,by=ry+rh-72,bw=220,bh=46;
     ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(bx-3,by-3,bw+6,bh+6,24);ctx.fill();
     ctx.fillStyle='#FFB800';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,22);ctx.fill();
-    ctx.fillStyle='#2B1000';ctx.font='bold 22px Arial';
+    ctx.fillStyle='#2B1000';ctx.font="10px 'Press Start 2P'";
     ctx.fillText('INICIAR',W/2,by+bh/2+8);
     intro_btns.play={x:bx,y:by,w:bw,h:bh};
   }
@@ -532,10 +535,10 @@ function drawHelp(){
   ctx.beginPath();ctx.roundRect(20,40,W-40,500,24);ctx.fill();
 
   ctx.textAlign='center';
-  ctx.fillStyle='#FFD700';ctx.font='bold 32px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
   ctx.fillText('COMO JOGAR',W/2,80);
 
-  ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.textAlign='left';
+  ctx.fillStyle='#fff';ctx.font="7px 'Press Start 2P'";ctx.textAlign='left';
   const x=40,sx=W-80;
   const instructions=[
     ['🎮 CONTROLES',false],
@@ -556,7 +559,7 @@ function drawHelp(){
   let y=110;
   instructions.forEach(([txt,isHeader])=>{
     ctx.fillStyle=isHeader===false?'#FFD700':'#fff';
-    ctx.font=isHeader===false?'bold 13px Arial':'12px Arial';
+    ctx.font=isHeader===false?"6px 'Press Start 2P'":"6px 'Press Start 2P'";
     ctx.fillText(txt,x,y);
     y+=isHeader===false?22:18;
   });
@@ -565,7 +568,7 @@ function drawHelp(){
   ctx.fillStyle='#FFD700';ctx.lineWidth=2;
   ctx.beginPath();ctx.roundRect(W/2-85,470,170,40,16);
   ctx.fill();
-  ctx.fillStyle='#1a0a2e';ctx.font='bold 16px Arial';ctx.textAlign='center';
+  ctx.fillStyle='#1a0a2e';ctx.font="8px 'Press Start 2P'";ctx.textAlign='center';
   ctx.fillText('← VOLTAR',W/2,495);
   menu_btns.back={x:W/2-85,y:470,w:170,h:40};
 }
@@ -573,25 +576,25 @@ function drawHelp(){
 function drawOver(){
   ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
-  ctx.fillStyle='#E53935';ctx.font='bold 44px Arial';ctx.fillText('FIM DE JOGO',W/2,120);
+  ctx.fillStyle='#E53935';ctx.font="16px 'Press Start 2P'";ctx.fillText('FIM DE JOGO',W/2,120);
   
   // Score
-  ctx.fillStyle='#fff';ctx.font='24px Arial';
+  ctx.fillStyle='#fff';ctx.font="10px 'Press Start 2P'";
   ctx.fillText('Pontuação Final',W/2,170);
-  ctx.fillStyle='#FFD700';ctx.font='bold 42px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="16px 'Press Start 2P'";
   ctx.fillText(Math.floor(score),W/2,220);
   
   
   // Buttons
   ctx.fillStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-100,310,200,50,20);ctx.fill();
-  ctx.fillStyle='#1a0a2e';ctx.font='bold 18px Arial';
+  ctx.fillStyle='#1a0a2e';ctx.font="8px 'Press Start 2P'";
   ctx.fillText('JOGAR NOVAMENTE',W/2,340);
   game_btns.restart={x:W/2-100,y:310,w:200,h:50};
 
   ctx.fillStyle='rgba(255,215,0,0.3)';ctx.lineWidth=2;ctx.strokeStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-100,380,200,50,20);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#FFD700';ctx.font='bold 18px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="8px 'Press Start 2P'";
   ctx.fillText('VOLTAR AO MENU',W/2,410);
   game_btns.menu={x:W/2-100,y:380,w:200,h:50};
 }
@@ -600,18 +603,18 @@ function drawOver(){
 function drawWin(){
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
-  ctx.fillStyle='#FFD700';ctx.font='bold 38px Arial';ctx.fillText('🎉 PARABÉNS! 🎉',W/2,150);
-  ctx.fillStyle='#fff';ctx.font='20px Arial';ctx.fillText('Você chegou à',W/2,202);
-  ctx.fillStyle='#FFD700';ctx.font='bold 26px Arial';ctx.fillText('Basílica de Aparecida!',W/2,238);
-  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='15px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="14px 'Press Start 2P'";ctx.fillText('🎉 PARABÉNS! 🎉',W/2,150);
+  ctx.fillStyle='#fff';ctx.font="9px 'Press Start 2P'";ctx.fillText('Você chegou à',W/2,202);
+  ctx.fillStyle='#FFD700';ctx.font="11px 'Press Start 2P'";ctx.fillText('Basílica de Aparecida!',W/2,238);
+  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font="7px 'Press Start 2P'";
   ctx.fillText('600 km percorridos',W/2,278);
   ctx.fillStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-100,320,200,50,20);ctx.fill();
-  ctx.fillStyle='#1a0a2e';ctx.font='bold 17px Arial';ctx.fillText('JOGAR NOVAMENTE',W/2,350);
+  ctx.fillStyle='#1a0a2e';ctx.font="8px 'Press Start 2P'";ctx.fillText('JOGAR NOVAMENTE',W/2,350);
   game_btns.restart={x:W/2-100,y:320,w:200,h:50};
   ctx.fillStyle='rgba(255,215,0,0.25)';ctx.lineWidth=2;ctx.strokeStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-100,388,200,50,20);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#FFD700';ctx.font='bold 17px Arial';ctx.fillText('VOLTAR AO MENU',W/2,418);
+  ctx.fillStyle='#FFD700';ctx.font="8px 'Press Start 2P'";ctx.fillText('VOLTAR AO MENU',W/2,418);
   game_btns.menu={x:W/2-100,y:388,w:200,h:50};
 }
 
@@ -620,23 +623,23 @@ function drawPaused(){
   ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,W,H);
   
   ctx.textAlign='center';
-  ctx.fillStyle='#FFD700';ctx.font='bold 48px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="18px 'Press Start 2P'";
   ctx.fillText('⏸ PAUSADO',W/2,160);
   
-  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='14px Arial';
+  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font="7px 'Press Start 2P'";
   ctx.fillText('Pontuação: '+Math.floor(score),W/2,220);
   
   // Resume button
   ctx.fillStyle='#4CAF50';
   ctx.beginPath();ctx.roundRect(W/2-90,280,180,50,20);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='bold 18px Arial';
+  ctx.fillStyle='#fff';ctx.font="8px 'Press Start 2P'";
   ctx.fillText('CONTINUAR',W/2,310);
   game_btns.resume={x:W/2-90,y:280,w:180,h:50};
   
   // Menu button
   ctx.fillStyle='rgba(255,215,0,0.3)';ctx.lineWidth=2;ctx.strokeStyle='#FFD700';
   ctx.beginPath();ctx.roundRect(W/2-90,350,180,50,20);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#FFD700';ctx.font='bold 18px Arial';
+  ctx.fillStyle='#FFD700';ctx.font="8px 'Press Start 2P'";
   ctx.fillText('VOLTAR AO MENU',W/2,380);
   game_btns.pauseMenu={x:W/2-90,y:350,w:180,h:50};
 }
@@ -853,9 +856,9 @@ function frame(){
 }
 
 (function wait(){
-  if(loaded>=TOTAL){frame();return;}
+  if(loaded>=TOTAL&&document.fonts.check("10px 'Press Start 2P'")){frame();return;}
   ctx.fillStyle='#0d1b2a';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#FFD700';ctx.font='bold 20px Arial';ctx.textAlign='center';
+  ctx.fillStyle='#FFD700';ctx.font="9px 'Press Start 2P'";ctx.textAlign='center';
   ctx.fillText('Carregando...',W/2,H/2-14);
   ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(W/2-80,H/2+8,160,10);
   ctx.fillStyle='#FFD700';ctx.fillRect(W/2-80,H/2+8,160*(loaded/TOTAL),10);
