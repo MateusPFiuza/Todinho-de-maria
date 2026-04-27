@@ -309,11 +309,9 @@ function drawHUD(){
   ctx.fillText('🛣 '+Math.floor(score)+' km',14,38);
   // Corações (sem label "Vidas")
   ctx.textAlign='right';
-  for(let i=2;i>=0;i--){
-    const full=i<pl.lives;
-    ctx.font=(full?'18':'14')+"px 'Press Start 2P'";
-    ctx.fillStyle=full?'#E53935':'#777777';
-    ctx.fillText('♥',W-72-i*26,full?40:39);
+  ctx.font="18px 'Press Start 2P'";ctx.fillStyle='#E53935';
+  for(let i=0;i<pl.lives;i++){
+    ctx.fillText('♥',W-72-i*26,40);
   }
   // Botão pause
   ctx.fillStyle='rgba(255,215,0,0.4)';ctx.lineWidth=1.5;ctx.strokeStyle='#FFD700';
