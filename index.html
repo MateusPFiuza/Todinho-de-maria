@@ -88,11 +88,11 @@ const B={
 };
 
 /* ── STATE ───────────────────────────────── */
-const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6,PHASE_INTRO:7};
+const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6,PHASE_INTRO:7,PHASE_WIN:8};
 const PHASES=[
-  {num:1,name:'Brasil'},
-  {num:2,name:'Portugal'},
-  {num:3,name:'México'},
+  {num:1,name:'Brasil',   flag:'🇧🇷',sanctuary:'Santuário de Aparecida'},
+  {num:2,name:'Portugal', flag:'🇵🇹',sanctuary:'Santuário de Fátima'},
+  {num:3,name:'México',   flag:'🇲🇽',sanctuary:'Basílica de Guadalupe'},
 ];
 let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
@@ -397,11 +397,7 @@ function update(){
   if(state!==ST.PLAY||pl.dead)return;
   bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
-  if(score>=600){
-    if(phase<3){phase++;bgmStop();init();startPhaseIntro();}
-    else{state=ST.WIN;bgmStop();}
-    return;
-  }
+  if(score>=600){bgmStop();state=ST.PHASE_WIN;return;}
   
   // Base speed + speed boost
   let baseSpd=6.5+Math.min(dist/6000,5);
@@ -637,6 +633,50 @@ function drawOver(){
   game_btns.menu={x:W/2-100,y:380,w:200,h:50};
 }
 
+/* ── PHASE WIN SCREEN ────────────────────────────────────── */
+function drawPhaseWin(){
+  const ph=PHASES[phase-1];
+  ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+
+  // Bandeira
+  ctx.font='72px sans-serif';
+  ctx.fillText(ph.flag,W/2,H/2-118);
+
+  // Mensagem de sucesso
+  ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
+  ctx.fillText('Você conseguiu chegar',W/2,H/2-30);
+  ctx.fillText('até o',W/2,H/2-8);
+  ctx.fillStyle='#FFFFFF';ctx.font="11px 'Press Start 2P'";
+  ctx.fillText(ph.sanctuary+'!',W/2,H/2+22);
+
+  // Botão
+  const label=phase<3?'CONTINUAR':'CONCLUIR';
+  ctx.fillStyle='#FFD700';
+  ctx.beginPath();ctx.roundRect(W/2-100,H/2+72,200,52,22);ctx.fill();
+  ctx.fillStyle='#1a0a2e';ctx.font="12px 'Press Start 2P'";
+  ctx.fillText(label,W/2,H/2+103);
+  game_btns.phaseNext={x:W/2-100,y:H/2+72,w:200,h:52};
+
+  // Botão voltar ao menu (menor, abaixo)
+  ctx.fillStyle='rgba(255,215,0,0.18)';ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,215,0,0.5)';
+  ctx.beginPath();ctx.roundRect(W/2-80,H/2+144,160,40,18);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(255,215,0,0.8)';ctx.font="9px 'Press Start 2P'";
+  ctx.fillText('VOLTAR AO MENU',W/2,H/2+169);
+  game_btns.phaseMenu={x:W/2-80,y:H/2+144,w:160,h:40};
+}
+
+function handlePhaseWinClick(c){
+  if(game_btns.phaseNext&&hitBtn(game_btns.phaseNext,c.x,c.y)){
+    if(phase<3){phase++;init();startPhaseIntro();}
+    else{state=ST.WIN;}
+    return;
+  }
+  if(game_btns.phaseMenu&&hitBtn(game_btns.phaseMenu,c.x,c.y)){
+    state=ST.MENU;return;
+  }
+}
+
 /* ── WIN SCREEN ──────────────────────────────────────────── */
 function drawWin(){
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(0,0,W,H);
@@ -750,6 +790,7 @@ cv.addEventListener('touchstart',e=>{
   if(state===ST.INTRO){handleIntroClick(c);sc=null;return;}
   if(state===ST.HELP){handleHelpClick(c);sc=null;return;}
   if(state===ST.PAUSED){handlePausedClick(c);sc=null;return;}
+  if(state===ST.PHASE_WIN){handlePhaseWinClick(c);sc=null;return;}
   if(state===ST.OVER){handleGameOverClick(c);sc=null;return;}
   if(state===ST.WIN){handleGameOverClick(c);sc=null;return;}
   
@@ -793,6 +834,7 @@ cv.addEventListener('click',e=>{
   if(state===ST.INTRO){handleIntroClick(c);return;}
   if(state===ST.HELP){handleHelpClick(c);return;}
   if(state===ST.PAUSED){handlePausedClick(c);return;}
+  if(state===ST.PHASE_WIN){handlePhaseWinClick(c);return;}
   if(state===ST.OVER){handleGameOverClick(c);return;}
   if(state===ST.WIN){handleGameOverClick(c);return;}
   if(state===ST.PLAY){handleGameClick(c);return;}
@@ -810,7 +852,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();return;
   }
 
-  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER||state===ST.PHASE_INTRO){
+  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER||state===ST.PHASE_INTRO||state===ST.PHASE_WIN){
     e.preventDefault();return;
   }
   
@@ -868,6 +910,8 @@ function frame(ts){
     drawHUD();
     drawCtl();
     drawOver();
+  } else if(state===ST.PHASE_WIN){
+    drawBG();drawHUD();drawPhaseWin();
   } else if(state===ST.WIN){
     drawBG();
     for(let lane=0;lane<LC;lane++){
