@@ -45,6 +45,8 @@ const SRCS={
   il:'assets/items/item_livro.png',  ie:'assets/items/item_escudo.png',
   is:'assets/items/item_estrela.png',
   bf:'assets/backgrounds/bg_chao.png',
+  bf2:'assets/backgrounds/bg_chao2.png',
+  bf3:'assets/backgrounds/bg_chao3.png',
   bc:'assets/backgrounds/bg_cenario.png',
   bc2:'assets/backgrounds/bg_cenario_2.png',
   bc3:'assets/backgrounds/bg_cenario_3.png',
@@ -168,12 +170,13 @@ function drawBG(){
 function drawFloor(){
   // Um único bloco cobre todas as lanes — de LANE.roadY até CTL_Y
   const fy=LANE.roadY, fh=CTL_Y-fy;
-  if(rdy('bf')){
-    const iw=IMG.bf.naturalWidth,ih=IMG.bf.naturalHeight;
+  const bfKey=phase===3&&rdy('bf3')?'bf3':phase===2&&rdy('bf2')?'bf2':'bf';
+  if(rdy(bfKey)){
+    const iw=IMG[bfKey].naturalWidth,ih=IMG[bfKey].naturalHeight;
     const scale=fh/ih, tw=iw*scale;
     const off=(bgOff*FLOOR_SPD)%tw;
     for(let x=-off;x<W+tw;x+=tw)
-      ctx.drawImage(IMG.bf,x,fy,tw+1,fh);
+      ctx.drawImage(IMG[bfKey],x,fy,tw+1,fh);
   } else {
     // Fallback: asfalto escuro com linhas tracejadas nas divisões de lane
     ctx.fillStyle='#2a2a2a';ctx.fillRect(0,fy,W,fh);
