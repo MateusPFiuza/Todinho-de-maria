@@ -107,7 +107,7 @@ let paused=false;
 let menu_btns={};
 let game_btns={};
 let intro_btns={};
-let introSlide=0;
+let introSlide=0, introSlideX=0, introTarget=0;
 
 const BGM=[
   new Audio('assets/soundtrack/brasil.mp3'),
@@ -203,7 +203,13 @@ function drawPlayer(){
   }
   const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':'pi';
   if(rdy(sk)){
-    ctx.drawImage(IMG[sk],dx,dy,PW,PH);
+    if(sk==='pa'){
+      const nat=IMG.pa.naturalWidth/IMG.pa.naturalHeight;
+      const sw=PH*nat;
+      ctx.drawImage(IMG.pa, pl.x-sw/2, dy, sw, PH);
+    } else {
+      ctx.drawImage(IMG[sk],dx,dy,PW,PH);
+    }
   } else {
     ctx.fillStyle=pl.hitT?'#F44336':pl.attacking?'#FF9800':'#2196F3';
     ctx.fillRect(dx,dy,PW,PH);
@@ -485,71 +491,88 @@ function drawMenu(){
 }
 
 /* ── INTRO SLIDES ────────────────────────────────────────── */
-function drawIntro(){
-  intro_btns={};
-  // Fundo azul puro
-  ctx.fillStyle='#1AACE8';ctx.fillRect(0,0,W,H);
-
+function drawOneSlide(slideIdx, ox){
   const rx=32,ry=230,rw=W-64,rh=370;
+  const cx=W/2+ox;
 
-  // Sprite pulando com proporção natural, maior
-  if(rdy('pj')){
-    const nat=IMG.pj.naturalWidth/IMG.pj.naturalHeight;
-    const sw=120,sh=sw/nat;
-    ctx.drawImage(IMG.pj,W/2-sw/2,ry-sh*0.68,sw,sh);
-  }
-
-  // Retângulo: borda ouro dupla + creme
-  ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(rx-5,ry-5,rw+10,rh+10,22);ctx.fill();
-  ctx.fillStyle='#F0A020';ctx.beginPath();ctx.roundRect(rx-3,ry-3,rw+6,rh+6,20);ctx.fill();
-  ctx.fillStyle='#F5E6C8';ctx.beginPath();ctx.roundRect(rx,ry,rw,rh,18);ctx.fill();
+  // Popup fundo
+  ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(rx+ox-5,ry-5,rw+10,rh+10,22);ctx.fill();
+  ctx.fillStyle='#F0A020';ctx.beginPath();ctx.roundRect(rx+ox-3,ry-3,rw+6,rh+6,20);ctx.fill();
+  ctx.fillStyle='#F5E6C8';ctx.beginPath();ctx.roundRect(rx+ox,ry,rw,rh,18);ctx.fill();
 
   ctx.textAlign='center';
-
-  // Clip no retângulo — nada vaza
+  // Clip interno
   ctx.save();
-  ctx.beginPath();ctx.roundRect(rx,ry,rw,rh,18);ctx.clip();
+  ctx.beginPath();ctx.roundRect(rx+ox,ry,rw,rh,18);ctx.clip();
 
-  if(introSlide===0){
-    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";ctx.fillText('Ajude o',W/2,ry+72);
-    ctx.fillStyle='#CC0000';ctx.font="24px 'Press Start 2P'";ctx.fillText('Todinho',W/2,ry+105);
-    ctx.fillStyle='#0033BB';ctx.font="21px 'Press Start 2P'";ctx.fillText('DE MARIA',W/2,ry+138);
+  if(slideIdx===0){
+    ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";ctx.fillText('Ajude o',cx,ry+72);
+    ctx.fillStyle='#CC0000';ctx.font="24px 'Press Start 2P'";ctx.fillText('Todinho',cx,ry+105);
+    ctx.fillStyle='#0033BB';ctx.font="21px 'Press Start 2P'";ctx.fillText('DE MARIA',cx,ry+138);
     ctx.fillStyle='#2B1000';ctx.font="15px 'Press Start 2P'";
-    ctx.fillText('a completar',W/2,ry+182);
-    ctx.fillText('a peregrinação',W/2,ry+207);
-    ctx.fillText('pelos países',W/2,ry+232);
+    ctx.fillText('a completar',cx,ry+182);
+    ctx.fillText('a peregrinação',cx,ry+207);
+    ctx.fillText('pelos países',cx,ry+232);
   } else {
-    ctx.fillStyle='#2B1000';ctx.font="13px 'Press Start 2P'";ctx.fillText('Como jogar:',W/2,ry+65);
+    ctx.fillStyle='#2B1000';ctx.font="13px 'Press Start 2P'";ctx.fillText('Como jogar:',cx,ry+65);
     ctx.font="9px 'Press Start 2P'";
     const tips=[
-      ['👆 Toque para pular',      ry+110],
-      ['↕ Arraste p/ cima ou baixo', ry+148],
+      ['👆 Toque para pular',       ry+110],
+      ['↕ Arraste p/ cima ou baixo',ry+148],
       ['  para mudar de faixa',     ry+166],
       ['👉 Arraste p/ o lado',      ry+204],
       ['  para quebrar caixas',     ry+222],
     ];
-    tips.forEach(([t,y])=>{ctx.fillStyle='#2B1000';ctx.fillText(t,W/2,y);});
+    tips.forEach(([t,y])=>{ctx.fillStyle='#2B1000';ctx.fillText(t,cx,y);});
 
-    const bx=W/2-110,by=ry+rh-70,bw=220,bh=46;
+    const bx=cx-110,by=ry+rh-70,bw=220,bh=46;
     ctx.fillStyle='#A05E00';ctx.beginPath();ctx.roundRect(bx-3,by-3,bw+6,bh+6,24);ctx.fill();
     ctx.fillStyle='#FFB800';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,22);ctx.fill();
     ctx.fillStyle='#2B1000';ctx.font="12px 'Press Start 2P'";
-    ctx.fillText('INICIAR',W/2,by+bh/2+5);
+    ctx.fillText('INICIAR',cx,by+bh/2+5);
     intro_btns.play={x:bx,y:by,w:bw,h:bh};
   }
+  ctx.restore();
 
-  ctx.restore(); // fim do clip
+  // Sprite na camada de cima (acima e sobre o popup)
+  const sprKey=slideIdx===0?'pj':'pa';
+  if(rdy(sprKey)){
+    const nat=IMG[sprKey].naturalWidth/IMG[sprKey].naturalHeight;
+    const sw=120,sh=sw/nat;
+    ctx.drawImage(IMG[sprKey],cx-sw/2,ry-sh*0.68,sw,sh);
+  }
+}
 
-  // Dots dentro do retângulo
-  const dotY=ry+rh-22;
+function drawIntro(){
+  intro_btns={};
+  ctx.fillStyle='#1AACE8';ctx.fillRect(0,0,W,H);
+
+  // Animação de slide (lerp)
+  introSlideX+=(introTarget-introSlideX)*Math.min(0.14*dt,1);
+  if(Math.abs(introSlideX-introTarget)<0.5){
+    introSlideX=introTarget;
+    introSlide=introTarget<-W/2?1:0;
+  }
+
+  // Clip canvas para slides não extravasarem
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+  drawOneSlide(0, Math.round(introSlideX));
+  drawOneSlide(1, Math.round(introSlideX)+W);
+  ctx.restore();
+
+  // Dots (fixos, fora do clip dos slides)
+  const ry=230,rh=370,dotY=ry+rh-22;
+  const dotProg=-introSlideX/W; // 0→slide0, 1→slide1
   [0,1].forEach(i=>{
     ctx.beginPath();ctx.arc(W/2-14+i*28,dotY,7,0,Math.PI*2);
-    ctx.fillStyle=i===introSlide?'#D4860A':'rgba(180,140,80,0.45)';ctx.fill();
+    ctx.fillStyle=Math.abs(i-dotProg)<0.5?'#D4860A':'rgba(180,140,80,0.45)';ctx.fill();
   });
 }
 
 function handleIntroClick(c){
-  if(introSlide===0){introSlide=1;return;}
+  if(Math.abs(introSlideX-introTarget)>4)return; // ignora durante animação
+  if(introSlide===0){introTarget=-W;return;}
   if(intro_btns.play&&hitBtn(intro_btns.play,c.x,c.y)){
     phase=1;init();startPhaseIntro();
   }
@@ -792,7 +815,7 @@ function toC(cx,cy){const r=cv.getBoundingClientRect();return{x:(cx-r.left)*W/r.
 /* ── HANDLE BUTTON CLICKS BY SCREEN ──────────────────────── */
 function handleMenuClick(c){
   if(menu_btns.play&&hitBtn(menu_btns.play,c.x,c.y)){
-    introSlide=0;state=ST.INTRO;return;
+    introSlide=0;introSlideX=0;introTarget=0;state=ST.INTRO;return;
   }
 }
 
