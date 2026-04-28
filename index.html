@@ -805,17 +805,6 @@ function drawPhaseWin(){
     topY+=dh+10;
   }
 
-  // Bandeira — canvas offscreen deslocado para alinhar emoji visual com topY
-  const eSize=52;
-  const oc=document.createElement('canvas');oc.width=eSize*2;oc.height=eSize*2;
-  const oc2=oc.getContext('2d');
-  oc2.font=`${eSize}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
-  oc2.textAlign='center';oc2.textBaseline='middle';
-  oc2.fillText(ph.flag,oc.width/2,oc.height/2);
-  const flagOffset=Math.round((oc.height-eSize)*0.5); // espaço vazio acima do emoji no canvas
-  ctx.drawImage(oc,W/2-oc.width/2,topY-flagOffset);
-  topY+=eSize+14;
-
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
   ctx.fillText('Você conseguiu chegar',W/2,topY);topY+=22;
