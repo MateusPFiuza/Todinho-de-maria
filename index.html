@@ -107,10 +107,19 @@ let game_btns={};
 let intro_btns={};
 let introSlide=0;
 
-const bgm=new Audio('assets/soundtrack/brasil.mp3');
-bgm.loop=true;bgm.volume=0.5;
-function bgmPlay(){bgm.pause();bgm.currentTime=0;bgm.play().catch(()=>{});}
-function bgmStop(){bgm.pause();bgm.currentTime=0;}
+const BGM=[
+  new Audio('assets/soundtrack/brasil.mp3'),
+  new Audio('assets/soundtrack/portugal.mp3'),
+  new Audio('assets/soundtrack/mexico.mp3'),
+];
+BGM.forEach(a=>{a.loop=true;a.volume=0.5;});
+// bgm é sempre a faixa da fase atual
+function bgmPlay(){
+  const a=BGM[phase-1]||BGM[0];
+  BGM.forEach(x=>{x.pause();x.currentTime=0;});
+  a.play().catch(()=>{});
+}
+function bgmStop(){BGM.forEach(a=>{a.pause();a.currentTime=0;});}
 function startPhaseIntro(){phaseIntroT=0;bgmPlay();state=ST.PHASE_INTRO;}
 
 function init(){
@@ -634,14 +643,46 @@ function drawOver(){
 }
 
 /* ── PHASE WIN SCREEN ────────────────────────────────────── */
+function drawFlag(cx,cy,w,h){
+  const r=6;
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(cx-w/2,cy-h/2,w,h,r);ctx.clip();
+  if(phase===1){
+    // Brasil: verde, faixa amarela horizontal, círculo azul, faixa branca
+    ctx.fillStyle='#009C3B';ctx.fillRect(cx-w/2,cy-h/2,w,h);
+    ctx.fillStyle='#FFDF00';
+    ctx.beginPath();ctx.moveTo(cx,cy-h/2+4);ctx.lineTo(cx+w/2-2,cy);ctx.lineTo(cx,cy+h/2-4);ctx.lineTo(cx-w/2+2,cy);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#002776';ctx.beginPath();ctx.arc(cx,cy,h*0.28,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.fillRect(cx-w*0.22,cy-2,w*0.44,4);
+  } else if(phase===2){
+    // Portugal: verde e vermelho, escudo no centro
+    ctx.fillStyle='#006600';ctx.fillRect(cx-w/2,cy-h/2,w*0.4,h);
+    ctx.fillStyle='#FF0000';ctx.fillRect(cx-w/2+w*0.4,cy-h/2,w*0.6,h);
+    ctx.fillStyle='#FFFF00';ctx.beginPath();ctx.arc(cx-w*0.1,cy,h*0.28,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#002776';ctx.beginPath();ctx.arc(cx-w*0.1,cy,h*0.18,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-w*0.1,cy,h*0.1,0,Math.PI*2);ctx.fill();
+  } else {
+    // México: verde, branco, vermelho em terços verticais
+    const tw=w/3;
+    ctx.fillStyle='#006847';ctx.fillRect(cx-w/2,cy-h/2,tw,h);
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(cx-w/2+tw,cy-h/2,tw,h);
+    ctx.fillStyle='#CE1126';ctx.fillRect(cx-w/2+tw*2,cy-h/2,tw,h);
+    ctx.fillStyle='#8B4513';ctx.beginPath();ctx.arc(cx,cy,h*0.22,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#228B22';ctx.beginPath();ctx.arc(cx,cy,h*0.14,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  // Borda
+  ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(cx-w/2,cy-h/2,w,h,r);ctx.stroke();
+}
+
 function drawPhaseWin(){
   const ph=PHASES[phase-1];
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
-  // Bandeira
-  ctx.font='72px sans-serif';
-  ctx.fillText(ph.flag,W/2,H/2-118);
+  // Bandeira desenhada
+  drawFlag(W/2,H/2-130,120,80);
 
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
@@ -730,9 +771,9 @@ function doAtk() {if(!pl.attacking){pl.attacking=true;pl.atT=24;}}
 
 function togglePause(){
   if(state===ST.PLAY){
-    state=ST.PAUSED;bgm.pause();
+    state=ST.PAUSED;BGM[phase-1].pause();
   } else if(state===ST.PAUSED){
-    state=ST.PLAY;bgm.play().catch(()=>{});
+    state=ST.PLAY;BGM[phase-1].play().catch(()=>{});
   }
 }
 
@@ -760,7 +801,7 @@ function handleGameClick(c){
 
 function handlePausedClick(c){
   if(game_btns.resume&&hitBtn(game_btns.resume,c.x,c.y)){
-    state=ST.PLAY;bgm.play().catch(()=>{});return;
+    state=ST.PLAY;BGM[phase-1].play().catch(()=>{});return;
   }
   if(game_btns.pauseMenu&&hitBtn(game_btns.pauseMenu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
