@@ -39,6 +39,9 @@ const SRCS={
   w2:'assets/sprites/1_base_2.png', w3:'assets/sprites/1_base_3.png',
   w4:'assets/sprites/1_base_4.png', w5:'assets/sprites/1_base_5.png',
   w6:'assets/sprites/1_base_6.png',
+  mx1:'assets/sprites/mexico/1.png', mx2:'assets/sprites/mexico/2.png',
+  mx3:'assets/sprites/mexico/3.png', mx4:'assets/sprites/mexico/4.png',
+  mx5:'assets/sprites/mexico/5.png', mx6:'assets/sprites/mexico/6.png',
   oa:'assets/obstacles/obs_a_buraco.png',
   ob:'assets/obstacles/obs_b_caixa.png',
   oc:'assets/obstacles/obs_c_pedra.png',
@@ -81,7 +84,8 @@ const BG_SPD   = 475/24000; // fundo revela exatamente ao chegar em 400km
 // Player
 const PW=74, PH=94;
 const JVY=-13, GR=0.7;   // jump velocity, gravity
-const WALK_KEYS=['pi','w2','w3','w4','w5','w6']; // 6 frames de corrida
+const WALK_KEYS   =['pi','w2','w3','w4','w5','w6'];    // fase 1 e 2
+const WALK_KEYS_MX=['mx1','mx2','mx3','mx4','mx5','mx6']; // fase 3 (México)
 const WALK_SPD=60/12; // frames de jogo por frame de animação (12 FPS)
 
 // Obstacle [width, height]
@@ -211,7 +215,8 @@ function drawPlayer(){
     ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.stroke();
     ctx.restore();
   }
-  const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':WALK_KEYS[walkFrame];
+  const wKeys=phase===3?WALK_KEYS_MX:WALK_KEYS;
+  const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':wKeys[walkFrame];
   if(rdy(sk)){
     ctx.drawImage(IMG[sk],dx,dy,PW,PH);
   } else {
