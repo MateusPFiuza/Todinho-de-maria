@@ -791,18 +791,22 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
-  // Layout dinâmico: topY avança conforme cada elemento é renderizado
-  let topY=32;
-
-  // Imagem de Maria no topo
+  // Pré-calcula dimensões da imagem para centralizar verticalmente
   const mariaKey=phase===3?'ma3':phase===2?'ma2':'ma1';
+  let imgDw=0,imgDh=0;
   if(rdy(mariaKey)){
     const img=IMG[mariaKey];
-    const maxH=185,maxW=W*0.66;
-    const s=Math.min(maxH/img.naturalHeight,maxW/img.naturalWidth);
-    const dw=img.naturalWidth*s,dh=img.naturalHeight*s;
-    ctx.drawImage(img,W/2-dw/2,topY,dw,dh);
-    topY+=dh+10;
+    const s=Math.min(185/img.naturalHeight,(W*0.66)/img.naturalWidth);
+    imgDw=img.naturalWidth*s;imgDh=img.naturalHeight*s;
+  }
+  const IMG_GAP=24; // espaço entre imagem e texto
+  const totalH=(imgDh>0?imgDh+IMG_GAP:0)+22+22+34+64+38;
+  let topY=Math.max(24,(H-totalH)/2);
+
+  // Imagem de Maria
+  if(imgDh>0){
+    ctx.drawImage(IMG[mariaKey],W/2-imgDw/2,topY,imgDw,imgDh);
+    topY+=imgDh+IMG_GAP;
   }
 
   // Mensagem de sucesso
