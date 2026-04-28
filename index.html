@@ -212,8 +212,8 @@ function drawPlayer(){
   if(rdy(sk)){
     if(sk==='pa'){
       const nat=IMG.pa.naturalWidth/IMG.pa.naturalHeight;
-      const sw=PH*nat;
-      ctx.drawImage(IMG.pa, pl.x-sw/2, dy, sw, PH);
+      const sw=Math.min(PW, PH*nat), sh=sw/nat;
+      ctx.drawImage(IMG.pa, pl.x-sw/2, dy+(PH-sh), sw, sh);
     } else {
       ctx.drawImage(IMG[sk],dx,dy,PW,PH);
     }
