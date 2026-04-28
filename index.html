@@ -75,8 +75,8 @@ const LY = LANE.y; // alias — restante do código não precisa mudar
 const LC = 3;
 
 const FLOOR_SPD = 0.65;   // velocidade do piso
-// bg_cenario: 2062×763px → escala height→324px → exibido 875px → pan 475px até 600km (dist=60000)
-const BG_SPD   = 475/36000; // fundo revela exatamente ao chegar em 600km
+// bg_cenario: 2062×763px → escala height→324px → exibido 875px → pan 475px até 400km (dist=24000)
+const BG_SPD   = 475/24000; // fundo revela exatamente ao chegar em 400km
 
 // Player
 const PW=74, PH=94;
@@ -400,7 +400,7 @@ function update(){
   if(state!==ST.PLAY||pl.dead)return;
   bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
-  if(score>=600){bgmStop();state=ST.PHASE_WIN;return;}
+  if(score>=400){bgmStop();state=ST.PHASE_WIN;return;}
   
   // Base speed + speed boost
   let baseSpd=6.5+Math.min(dist/6000,5);
