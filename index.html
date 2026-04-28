@@ -43,6 +43,7 @@ const SRCS={
   is:'assets/items/item_estrela.png',
   bf:'assets/backgrounds/bg_chao.png',
   bc:'assets/backgrounds/bg_cenario.png',
+  bc2:'assets/backgrounds/bg_cenario_2.png',
   t1:'assets/telas/tela_1.png',
 };
 const TOTAL=Object.keys(SRCS).length;
@@ -138,12 +139,13 @@ function init(){
 function drawBG(){
   // Background parallax horizontal — revela até 600km
   const skyH=LANE.roadY-HUD_H;
-  if(rdy('bc')){
-    const ih=IMG.bc.naturalHeight,iw=IMG.bc.naturalWidth;
+  const bcKey=phase===2&&rdy('bc2')?'bc2':'bc';
+  if(rdy(bcKey)){
+    const ih=IMG[bcKey].naturalHeight,iw=IMG[bcKey].naturalWidth;
     const scale=skyH/ih, tw=iw*scale;
     const maxScroll=Math.max(0,tw-W);
     const scrollX=Math.min(bgOff*BG_SPD,maxScroll);
-    ctx.drawImage(IMG.bc,-scrollX,HUD_H,tw,skyH);
+    ctx.drawImage(IMG[bcKey],-scrollX,HUD_H,tw,skyH);
   } else {
     const g=ctx.createLinearGradient(0,HUD_H,0,LANE.roadY);
     g.addColorStop(0,'#1565C0');g.addColorStop(0.5,'#42A5F5');g.addColorStop(1,'#B3E5FC');
@@ -681,8 +683,9 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
-  // Bandeira desenhada
-  drawFlag(W/2,H/2-130,120,80);
+  // Bandeira emoji
+  ctx.font='72px serif';
+  ctx.fillText(ph.flag,W/2,H/2-88);
 
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
