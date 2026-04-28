@@ -271,6 +271,11 @@ function drawObs(o){
 function drawItem(it){
   const bob=Math.sin(Date.now()/300+it.phase)*5;
   const ix=it.x-IW/2, iy=LY[it.lane]-IH-16+bob;
+  // Sombra no chão da lane — scala com a altura do bob
+  const shadowScale=0.6+0.4*((bob+5)/10); // menor quando item está no topo do bob
+  ctx.save();ctx.globalAlpha=0.28*shadowScale;ctx.fillStyle='#000';
+  ctx.beginPath();ctx.ellipse(it.x,LY[it.lane]+5,IW*0.48*shadowScale,5,0,0,Math.PI*2);
+  ctx.fill();ctx.restore();
   if(it.type==='cerveja'||it.type==='peixe'||it.type==='pimenta'){
     const em=it.type==='cerveja'?'🍺':it.type==='peixe'?'🐟':'🌶️';
     ctx.save();ctx.font='30px serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -439,13 +444,13 @@ function update(){
   const GAP=220;
   let rightmost=-Infinity;
   for(const o of obs)if(o.x>rightmost)rightmost=o.x;
+  for(const i of its)if(i.x>rightmost)rightmost=i.x; // items também bloqueiam spawn de obstáculos
   const starActive=starMode&&starT>80;
   const obsCanSpawn=starActive?rightmost<W-100:rightmost<W-GAP;
-  for(const i of its)if(i.x>rightmost)rightmost=i.x;
   const clearToSpawn=rightmost<W-GAP;
 
   obsT+=dt;
-  const fishObsI=fishMode?obsI*0.7:obsI;
+  const fishObsI=fishMode?Math.max(30,obsI*0.25):obsI; // peixe: 4x mais obstáculos
   if(obsT>=(starActive?25:fishObsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
