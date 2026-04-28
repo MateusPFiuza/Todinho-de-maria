@@ -36,6 +36,9 @@ const SRCS={
   pi:'assets/sprites/1_base.png',    pj:'assets/sprites/2_pulando.png',
   pa:'assets/sprites/3_ataque.png',  ph:'assets/sprites/4_dano.png',
   pd:'assets/sprites/5_gameover.png',
+  w2:'assets/sprites/2.png', w3:'assets/sprites/3.png',
+  w4:'assets/sprites/4.png', w5:'assets/sprites/5.png',
+  w6:'assets/sprites/6.png',
   oa:'assets/obstacles/obs_a_buraco.png',
   ob:'assets/obstacles/obs_b_caixa.png',
   oc:'assets/obstacles/obs_c_pedra.png',
@@ -76,6 +79,8 @@ const BG_SPD   = 475/36000; // fundo revela exatamente ao chegar em 600km
 // Player
 const PW=74, PH=94;
 const JVY=-13, GR=0.7;   // jump velocity, gravity
+const WALK_KEYS=['pi','w2','w3','w4','w5','w6']; // 6 frames de corrida
+const WALK_SPD=60/12; // frames de jogo por frame de animação (12 FPS)
 
 // Obstacle [width, height]
 const OS={a:[96,36],b:[60,60],c:[72,52]};
@@ -101,7 +106,8 @@ let hs=+localStorage.getItem('tdm_hs')||0;
 let phase=1,phaseIntroT=0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
-let speedBoost={active:false,duration:0};  // speed boost from livro item
+let speedBoost={active:false,duration:0};
+let walkFrame=0,walkT=0;  // speed boost from livro item
 let lastTime=0,dt=1;
 let paused=false;
 let menu_btns={};
@@ -130,6 +136,7 @@ function init(){
   itmT=60;itmI=140;  // itens — menos frequentes que obstáculos
   shield=false;shT=0;flash=false;flashT=0;bgOff=0;starMode=false;starT=0;toast='';toastT=0;
   speedBoost={active:false,duration:0};
+  walkFrame=0;walkT=0;
   obs=[];its=[];parts=[];
   pl={lane:1,x:LANE.px[1],y:LY[1]-PH,vy:0,jOff:0,
       jumping:false,attacking:false,atT:0,hitT:0,lives:3,dead:false};
@@ -201,7 +208,7 @@ function drawPlayer(){
     ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.stroke();
     ctx.restore();
   }
-  const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':'pi';
+  const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':WALK_KEYS[walkFrame];
   if(rdy(sk)){
     if(sk==='pa'){
       const nat=IMG.pa.naturalWidth/IMG.pa.naturalHeight;
@@ -468,6 +475,12 @@ function update(){
   if(shield&&(shT-=dt)<=0)shield=false;
   if(starMode&&(starT-=dt)<=0)starMode=false;
   if(toastT>0){toastT-=dt;if(toastT<0)toastT=0;}
+
+  // Animação de corrida — avança apenas quando no chão, sem ataque/dano
+  if(!pl.jumping&&!pl.attacking&&pl.hitT<=0&&!pl.dead){
+    walkT+=dt;
+    if(walkT>=WALK_SPD){walkT=0;walkFrame=(walkFrame+1)%WALK_KEYS.length;}
+  }
 
   for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd*dt;if(obs[i].x<-90)obs.splice(i,1);}
   for(let i=its.length-1;i>=0;i--){its[i].x-=spd*dt;if(its[i].x<-50)its.splice(i,1);}
