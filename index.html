@@ -370,7 +370,7 @@ function drawMariaOverlay(){
   const alpha=Math.min(1,(360-starT)/25,starT/25);
   if(alpha<=0)return;
   const skyTop=HUD_H+8, skyH=LANE.roadY-HUD_H-16;
-  const scale=Math.min(skyH/img.naturalHeight,(W*0.72)/img.naturalWidth);
+  const scale=Math.min((skyH*0.60)/img.naturalHeight,(W*0.54)/img.naturalWidth);
   const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
   const cx=W/2, iy=skyTop+(skyH-dh)/2+Math.sin(Date.now()/900)*4;
   ctx.save();
@@ -791,46 +791,52 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
-  // Imagem de Maria no topo do popup
+  // Layout dinâmico: topY avança conforme cada elemento é renderizado
+  let topY=32;
+
+  // Imagem de Maria no topo
   const mariaKey=phase===3?'ma3':phase===2?'ma2':'ma1';
   if(rdy(mariaKey)){
     const img=IMG[mariaKey];
-    const maxH=190,maxW=W*0.68;
+    const maxH=185,maxW=W*0.66;
     const s=Math.min(maxH/img.naturalHeight,maxW/img.naturalWidth);
     const dw=img.naturalWidth*s,dh=img.naturalHeight*s;
-    ctx.drawImage(img,W/2-dw/2,36,dw,dh);
+    ctx.drawImage(img,W/2-dw/2,topY,dw,dh);
+    topY+=dh+10;
   }
 
-  // Bandeira — renderiza em canvas offscreen para garantir emoji de bandeira
-  const eSize=60;
+  // Bandeira
+  const eSize=52;
   const oc=document.createElement('canvas');oc.width=eSize*2;oc.height=eSize*2;
   const oc2=oc.getContext('2d');
   oc2.font=`${eSize}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
   oc2.textAlign='center';oc2.textBaseline='middle';
   oc2.fillText(ph.flag,oc.width/2,oc.height/2);
-  ctx.drawImage(oc,W/2-oc.width/2,238);
+  ctx.drawImage(oc,W/2-oc.width/2,topY);
+  topY+=oc.height+10;
 
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
-  ctx.fillText('Você conseguiu chegar',W/2,372);
-  ctx.fillText('até o',W/2,394);
+  ctx.fillText('Você conseguiu chegar',W/2,topY);topY+=22;
+  ctx.fillText('até o',W/2,topY);topY+=22;
   ctx.fillStyle='#FFFFFF';ctx.font="11px 'Press Start 2P'";
-  ctx.fillText(ph.sanctuary+'!',W/2,418);
+  ctx.fillText(ph.sanctuary+'!',W/2,topY);topY+=34;
 
   // Botão continuar/concluir
   const label=phase<3?'CONTINUAR':'CONCLUIR';
   ctx.fillStyle='#FFD700';
-  ctx.beginPath();ctx.roundRect(W/2-100,448,200,52,22);ctx.fill();
+  ctx.beginPath();ctx.roundRect(W/2-100,topY,200,52,22);ctx.fill();
   ctx.fillStyle='#1a0a2e';ctx.font="12px 'Press Start 2P'";
-  ctx.fillText(label,W/2,479);
-  game_btns.phaseNext={x:W/2-100,y:448,w:200,h:52};
+  ctx.fillText(label,W/2,topY+31);
+  game_btns.phaseNext={x:W/2-100,y:topY,w:200,h:52};
+  topY+=64;
 
   // Botão voltar ao menu
   ctx.fillStyle='rgba(255,215,0,0.18)';ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,215,0,0.5)';
-  ctx.beginPath();ctx.roundRect(W/2-80,518,160,38,18);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(W/2-80,topY,160,38,18);ctx.fill();ctx.stroke();
   ctx.fillStyle='rgba(255,215,0,0.8)';ctx.font="9px 'Press Start 2P'";
-  ctx.fillText('VOLTAR AO MENU',W/2,542);
-  game_btns.phaseMenu={x:W/2-80,y:518,w:160,h:38};
+  ctx.fillText('VOLTAR AO MENU',W/2,topY+24);
+  game_btns.phaseMenu={x:W/2-80,y:topY,w:160,h:38};
 }
 
 function handlePhaseWinClick(c){
