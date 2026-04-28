@@ -950,9 +950,9 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();drawItemEffects();
+    drawP();
     drawHUD();
-    drawCtl();
+    drawCtl();drawItemEffects();
     drawPaused();
   } else if(state===ST.OVER){
     // Draw final game frame, then game over screen
@@ -977,7 +977,7 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();drawItemEffects();drawHUD();drawCtl();drawWin();
+    drawP();drawHUD();drawCtl();drawItemEffects();drawWin();
   } else {
     // ST.PLAY
     update();
@@ -988,9 +988,9 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();drawItemEffects();
+    drawP();
     drawHUD();
-    drawCtl();
+    drawCtl();drawItemEffects();
   }
 
   requestAnimationFrame(frame);
