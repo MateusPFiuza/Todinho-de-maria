@@ -54,6 +54,9 @@ const SRCS={
   bc2:'assets/backgrounds/bg_cenario_2.png',
   bc3:'assets/backgrounds/bg_cenario_3.png',
   t1:'assets/telas/tela_1.png',
+  ma1:'assets/maria/aparecida.png',
+  ma2:'assets/maria/fatima.png',
+  ma3:'assets/maria/guadalupe.png',
 };
 const TOTAL=Object.keys(SRCS).length;
 for(const[k,v]of Object.entries(SRCS)){
@@ -342,6 +345,39 @@ function drawCtl(){
   ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,CTL_Y,W,CTL_H);
   ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(0,CTL_Y);ctx.lineTo(W,CTL_Y);ctx.stroke();
+}
+
+/* ── MARIA OVERLAY ───────────────────────── */
+function drawMaryRays(cx,cy,r,alpha){
+  const t=Date.now()/7000;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(t);
+  for(let i=0;i<16;i++){
+    const a1=(i/16)*Math.PI*2;
+    const wide=i%2===0;
+    ctx.globalAlpha=alpha*(wide?0.22:0.09);
+    ctx.fillStyle='#FFFDE7';
+    ctx.beginPath();ctx.moveTo(0,0);
+    ctx.arc(0,0,r,a1,a1+(wide?Math.PI/9:Math.PI/20));
+    ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+function drawMariaOverlay(){
+  if(!starMode)return;
+  const key=phase===3?'ma3':phase===2?'ma2':'ma1';
+  if(!rdy(key))return;
+  const img=IMG[key];
+  const alpha=Math.min(1,(360-starT)/25,starT/25);
+  if(alpha<=0)return;
+  const skyTop=HUD_H+8, skyH=LANE.roadY-HUD_H-16;
+  const scale=Math.min(skyH/img.naturalHeight,(W*0.72)/img.naturalWidth);
+  const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
+  const cx=W/2, iy=skyTop+(skyH-dh)/2+Math.sin(Date.now()/900)*4;
+  ctx.save();
+  drawMaryRays(cx,iy+dh/2,Math.max(dw,dh)*0.94,alpha);
+  ctx.globalAlpha=alpha;
+  ctx.drawImage(img,cx-dw/2,iy,dw,dh);
+  ctx.restore();
 }
 
 /* ── HUD ─────────────────────────────────── */
@@ -755,36 +791,46 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
+  // Imagem de Maria no topo do popup
+  const mariaKey=phase===3?'ma3':phase===2?'ma2':'ma1';
+  if(rdy(mariaKey)){
+    const img=IMG[mariaKey];
+    const maxH=190,maxW=W*0.68;
+    const s=Math.min(maxH/img.naturalHeight,maxW/img.naturalWidth);
+    const dw=img.naturalWidth*s,dh=img.naturalHeight*s;
+    ctx.drawImage(img,W/2-dw/2,36,dw,dh);
+  }
+
   // Bandeira — renderiza em canvas offscreen para garantir emoji de bandeira
-  const eSize=72;
+  const eSize=60;
   const oc=document.createElement('canvas');oc.width=eSize*2;oc.height=eSize*2;
   const oc2=oc.getContext('2d');
   oc2.font=`${eSize}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
   oc2.textAlign='center';oc2.textBaseline='middle';
   oc2.fillText(ph.flag,oc.width/2,oc.height/2);
-  ctx.drawImage(oc,W/2-oc.width/2,H/2-168);
+  ctx.drawImage(oc,W/2-oc.width/2,238);
 
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
-  ctx.fillText('Você conseguiu chegar',W/2,H/2-30);
-  ctx.fillText('até o',W/2,H/2-8);
+  ctx.fillText('Você conseguiu chegar',W/2,372);
+  ctx.fillText('até o',W/2,394);
   ctx.fillStyle='#FFFFFF';ctx.font="11px 'Press Start 2P'";
-  ctx.fillText(ph.sanctuary+'!',W/2,H/2+22);
+  ctx.fillText(ph.sanctuary+'!',W/2,418);
 
-  // Botão
+  // Botão continuar/concluir
   const label=phase<3?'CONTINUAR':'CONCLUIR';
   ctx.fillStyle='#FFD700';
-  ctx.beginPath();ctx.roundRect(W/2-100,H/2+72,200,52,22);ctx.fill();
+  ctx.beginPath();ctx.roundRect(W/2-100,448,200,52,22);ctx.fill();
   ctx.fillStyle='#1a0a2e';ctx.font="12px 'Press Start 2P'";
-  ctx.fillText(label,W/2,H/2+103);
-  game_btns.phaseNext={x:W/2-100,y:H/2+72,w:200,h:52};
+  ctx.fillText(label,W/2,479);
+  game_btns.phaseNext={x:W/2-100,y:448,w:200,h:52};
 
-  // Botão voltar ao menu (menor, abaixo)
+  // Botão voltar ao menu
   ctx.fillStyle='rgba(255,215,0,0.18)';ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,215,0,0.5)';
-  ctx.beginPath();ctx.roundRect(W/2-80,H/2+144,160,40,18);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(W/2-80,518,160,38,18);ctx.fill();ctx.stroke();
   ctx.fillStyle='rgba(255,215,0,0.8)';ctx.font="9px 'Press Start 2P'";
-  ctx.fillText('VOLTAR AO MENU',W/2,H/2+169);
-  game_btns.phaseMenu={x:W/2-80,y:H/2+144,w:160,h:40};
+  ctx.fillText('VOLTAR AO MENU',W/2,542);
+  game_btns.phaseMenu={x:W/2-80,y:518,w:160,h:38};
 }
 
 function handlePhaseWinClick(c){
@@ -1001,7 +1047,7 @@ function frame(ts){
   } else if(state===ST.PAUSED){
     // Draw game in background, then pause overlay
     update();
-    drawBG();
+    drawBG();drawMariaOverlay();
     for(let lane=0;lane<LC;lane++){
       its.filter(it=>it.lane===lane).forEach(drawItem);
       obs.filter(o=>o.lane===lane).forEach(drawObs);
@@ -1028,7 +1074,7 @@ function frame(ts){
   } else if(state===ST.PHASE_WIN){
     drawBG();drawHUD();drawPhaseWin();
   } else if(state===ST.WIN){
-    drawBG();
+    drawBG();drawMariaOverlay();
     for(let lane=0;lane<LC;lane++){
       its.filter(it=>it.lane===lane).forEach(drawItem);
       obs.filter(o=>o.lane===lane).forEach(drawObs);
@@ -1038,7 +1084,7 @@ function frame(ts){
   } else {
     // ST.PLAY
     update();
-    drawBG();
+    drawBG();drawMariaOverlay();
     // Desenha por lane do mais longe (0) ao mais perto (2) — profundidade correta
     for(let lane=0;lane<LC;lane++){
       its.filter(it=>it.lane===lane).forEach(drawItem);
