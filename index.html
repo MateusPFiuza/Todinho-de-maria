@@ -44,6 +44,7 @@ const SRCS={
   bf:'assets/backgrounds/bg_chao.png',
   bc:'assets/backgrounds/bg_cenario.png',
   bc2:'assets/backgrounds/bg_cenario_2.png',
+  bc3:'assets/backgrounds/bg_cenario_3.png',
   t1:'assets/telas/tela_1.png',
 };
 const TOTAL=Object.keys(SRCS).length;
@@ -139,7 +140,7 @@ function init(){
 function drawBG(){
   // Background parallax horizontal — revela até 600km
   const skyH=LANE.roadY-HUD_H;
-  const bcKey=phase===2&&rdy('bc2')?'bc2':'bc';
+  const bcKey=phase===3&&rdy('bc3')?'bc3':phase===2&&rdy('bc2')?'bc2':'bc';
   if(rdy(bcKey)){
     const ih=IMG[bcKey].naturalHeight,iw=IMG[bcKey].naturalWidth;
     const scale=skyH/ih, tw=iw*scale;
@@ -683,9 +684,14 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
 
-  // Bandeira emoji
-  ctx.font='72px serif';
-  ctx.fillText(ph.flag,W/2,H/2-88);
+  // Bandeira — renderiza em canvas offscreen para garantir emoji de bandeira
+  const eSize=72;
+  const oc=document.createElement('canvas');oc.width=eSize*2;oc.height=eSize*2;
+  const oc2=oc.getContext('2d');
+  oc2.font=`${eSize}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+  oc2.textAlign='center';oc2.textBaseline='middle';
+  oc2.fillText(ph.flag,oc.width/2,oc.height/2);
+  ctx.drawImage(oc,W/2-oc.width/2,H/2-168);
 
   // Mensagem de sucesso
   ctx.fillStyle='#FFD700';ctx.font="12px 'Press Start 2P'";
