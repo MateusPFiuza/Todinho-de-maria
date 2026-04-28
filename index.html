@@ -297,22 +297,9 @@ function drawP(){
 
 /* ── CONTROLS UI ─────────────────────────── */
 function drawCtl(){
-  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(0,CTL_Y,W,CTL_H);
-  ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+  ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,CTL_Y,W,CTL_H);
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(0,CTL_Y);ctx.lineTo(W,CTL_Y);ctx.stroke();
-  const btn=(b,lbl,col,active)=>{
-    ctx.fillStyle=active?col:'rgba(255,255,255,0.1)';
-    ctx.strokeStyle=active?col:'rgba(255,255,255,0.28)';
-    ctx.lineWidth=2;
-    ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,12);ctx.fill();ctx.stroke();
-    ctx.fillStyle=active?'#111':'#fff';
-    ctx.font="10px 'Press Start 2P'";ctx.textAlign='center';
-    ctx.fillText(lbl,b.x+b.w/2,b.y+b.h/2+5);
-  };
-  btn(B.u,'▲','#FFD700',false);
-  btn(B.d,'▼','#FFD700',false);
-  btn(B.j,'PULO','#1E88E5',pl?.jumping);
-  btn(B.a,'ATAQUE','#E53935',pl?.attacking);
 }
 
 /* ── HUD ─────────────────────────────────── */
@@ -338,28 +325,29 @@ function drawHUD(){
 
 // Efeitos de item sobrepostos ao jogo (não no HUD)
 function drawItemEffects(){
-  if(toastT>0){
-    ctx.save();ctx.textAlign='center';ctx.font="12px 'Press Start 2P'";
-    ctx.globalAlpha=Math.min(1,toastT/20);
-    ctx.fillStyle='#7A0000';ctx.fillText(toast,W/2,HUD_H+75);
-    ctx.restore();
-  }
-  if(!speedBoost?.active&&!shield&&!starMode)return;
-  const ty=HUD_H+36;
+  const cy=CTL_Y+CTL_H/2+6; // centro da área inferior
   ctx.save();ctx.textAlign='center';ctx.font="12px 'Press Start 2P'";
-  let yOff=0;
-  if(speedBoost?.active){
-    ctx.fillStyle='rgba(255,152,0,0.18)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#CC4400';ctx.fillText('⚡ ACELERADO',W/2,ty);yOff+=20;
+
+  if(toastT>0){
+    ctx.globalAlpha=Math.min(1,toastT/20);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText(toast,W/2,cy);
   }
-  if(shield){
-    ctx.fillStyle='rgba(0,191,255,0.15)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#005C8A';ctx.fillText('🛡 Dom da Fortaleza',W/2,ty+yOff);yOff+=20;
+
+  if(speedBoost?.active||shield||starMode){
+    ctx.globalAlpha=1;
+    let yOff=toastT>0?-18:0;
+    if(speedBoost?.active){
+      ctx.fillStyle='#FFB347';ctx.fillText('⚡ ACELERADO',W/2,cy+yOff);yOff+=20;
+    }
+    if(shield){
+      ctx.fillStyle='#7ED6F5';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=20;
+    }
+    if(starMode){
+      ctx.fillStyle='#FFE566';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);
+    }
   }
-  if(starMode){
-    ctx.fillStyle='rgba(255,215,0,0.15)';ctx.fillRect(0,HUD_H,W,50);
-    ctx.fillStyle='#7A5200';ctx.fillText('✨ Intercessão de Maria',W/2,ty+yOff);
-  }
+
   ctx.restore();
 }
 
@@ -873,12 +861,6 @@ cv.addEventListener('touchstart',e=>{
   if(state===ST.PLAY&&!pl.dead){
     handleGameClick(c);
     sc=c;
-    if(c.y>=CTL_Y){
-      if(hitBtn(B.u,c.x,c.y))laneUp();
-      if(hitBtn(B.d,c.x,c.y))laneDn();
-      if(hitBtn(B.j,c.x,c.y))doJump();
-      if(hitBtn(B.a,c.x,c.y))doAtk();
-    }
   }
 },{passive:false});
 
@@ -886,7 +868,7 @@ cv.addEventListener('touchend',e=>{
   e.preventDefault();
   if(!sc||state!==ST.PLAY||pl.dead){sc=null;return;}
   const t=e.changedTouches[0],c=toC(t.clientX,t.clientY);
-  if(sc.y<CTL_Y){ // interação na área de jogo
+  {
     const dx=c.x-sc.x, dy=c.y-sc.y;
     const moved=Math.sqrt(dx*dx+dy*dy);
     if(moved<22){                                          // tap → pulo
