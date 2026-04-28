@@ -113,6 +113,9 @@ let phase=1,phaseIntroT=0;
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};
+let beerMode=false,beerT=0;   // cerveja (fase 1): controles invertidos, sem pulo
+let fishMode=false,fishT=0;   // peixe   (fase 2): +30% obstáculos
+let pepMode=false,pepT=0;     // pimenta (fase 3): +50% velocidade, pisca vermelho
 let walkFrame=0,walkT=0;  // speed boost from livro item
 let lastTime=0,dt=1;
 let paused=false;
@@ -142,6 +145,7 @@ function init(){
   itmT=60;itmI=140;  // itens — menos frequentes que obstáculos
   shield=false;shT=0;flash=false;flashT=0;bgOff=0;starMode=false;starT=0;toast='';toastT=0;
   speedBoost={active:false,duration:0};
+  beerMode=false;beerT=0;fishMode=false;fishT=0;pepMode=false;pepT=0;
   walkFrame=0;walkT=0;
   obs=[];its=[];parts=[];
   pl={lane:1,x:LANE.px[1],y:LY[1]-PH,vy:0,jOff:0,
@@ -231,6 +235,10 @@ function drawPlayer(){
     ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
+  if(pepMode&&Math.floor(Date.now()/120)%2===0){
+    ctx.save();ctx.globalAlpha=0.38;ctx.fillStyle='#F44336';
+    ctx.fillRect(dx,dy,PW,PH);ctx.restore();
+  }
 }
 
 /* ── OBSTACLES ───────────────────────────── */
@@ -263,6 +271,12 @@ function drawObs(o){
 function drawItem(it){
   const bob=Math.sin(Date.now()/300+it.phase)*5;
   const ix=it.x-IW/2, iy=LY[it.lane]-IH-16+bob;
+  if(it.type==='cerveja'||it.type==='peixe'||it.type==='pimenta'){
+    const em=it.type==='cerveja'?'🍺':it.type==='peixe'?'🐟':'🌶️';
+    ctx.save();ctx.font='30px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(em,it.x,iy+IH/2);ctx.restore();
+    return;
+  }
   const k=it.type==='livro'?'il':it.type==='escudo'?'ie':'is';
   if(rdy(k)){ctx.drawImage(IMG[k],ix,iy,IW,IH);}
   else{
@@ -341,17 +355,14 @@ function drawItemEffects(){
     ctx.fillText(toast,W/2,cy);
   }
 
-  if(speedBoost?.active||shield||starMode){
+  if(speedBoost?.active||shield||starMode||beerMode||fishMode||pepMode){
     let yOff=toastT>0?-18:0;
-    if(speedBoost?.active){
-      ctx.fillStyle='#FFB347';ctx.fillText('⚡ ACELERADO',W/2,cy+yOff);yOff+=20;
-    }
-    if(shield){
-      ctx.fillStyle='#FFFFFF';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=20;
-    }
-    if(starMode){
-      ctx.fillStyle='#FFD700';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);
-    }
+    if(speedBoost?.active){ctx.fillStyle='#FFB347';ctx.fillText('⚡ ACELERADO',W/2,cy+yOff);yOff+=20;}
+    if(shield){ctx.fillStyle='#FFFFFF';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=20;}
+    if(starMode){ctx.fillStyle='#FFD700';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);yOff+=20;}
+    if(beerMode){ctx.fillStyle='#FF8F00';ctx.fillText('🍺 Comandos invertidos!',W/2,cy+yOff);yOff+=20;}
+    if(fishMode){ctx.fillStyle='#64B5F6';ctx.fillText('🐟 Aumento de obstáculos!',W/2,cy+yOff);yOff+=20;}
+    if(pepMode){ctx.fillStyle='#FF5252';ctx.fillText('🌶 Arribaaaaaa!',W/2,cy+yOff);}
   }
 
   ctx.restore();
@@ -368,8 +379,20 @@ function checkCols(){
     const ix=it.x-IW/2,iy=LY[it.lane]-IH-16;
     if(overlap(px,py,pw,ph,ix,iy,IW,IH)){
       if(it.type==='livro'){if(pl.lives<3){pl.lives++;spawnP(it.x,iy+IH/2,'#E53935',10);}toast='📖 Vida nova';toastT=90;}
-      if(it.type==='estrela'){starMode=true;starT=360;spawnP(it.x,iy+IH/2,'#FFD700',16);}  // Limpa todos obstáculos na tela
+      if(it.type==='estrela'){starMode=true;starT=360;spawnP(it.x,iy+IH/2,'#FFD700',16);}
       if(it.type==='escudo'){shield=true;shT=300;spawnP(it.x,iy+IH/2,'#4CAF50',12);}
+      if(it.type==='cerveja'){
+        if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
+        else if(!starMode){beerMode=true;beerT=300;toast='🍺 Comandos invertidos!';toastT=120;spawnP(it.x,iy+IH/2,'#F9A825',12);}
+      }
+      if(it.type==='peixe'){
+        if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
+        else if(!starMode){fishMode=true;fishT=300;toast='🐟 Aumento de obstáculos!';toastT=120;spawnP(it.x,iy+IH/2,'#64B5F6',12);}
+      }
+      if(it.type==='pimenta'){
+        if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
+        else if(!starMode){pepMode=true;pepT=300;toast='🌶 Pimenta! Arribaaaaaa! Velocidade aumentando';toastT=120;spawnP(it.x,iy+IH/2,'#F44336',12);}
+      }
       its.splice(i,1);
     }
   }
@@ -407,9 +430,10 @@ function update(){
   score=dist/60;
   if(score>=400){bgmStop();state=ST.PHASE_WIN;return;}
   
-  // Base speed + speed boost
+  // Base speed + speed boost + pimenta
   let baseSpd=6.5+Math.min(dist/6000,5);
-  spd=speedBoost.active ? baseSpd*1.4 : baseSpd;  // 40% mais rápido com boost
+  spd=speedBoost.active ? baseSpd*1.4 : baseSpd;
+  if(pepMode) spd*=1.5;
 
   // Distância mínima entre qualquer objeto e a borda direita antes de spawnar
   const GAP=220;
@@ -421,7 +445,8 @@ function update(){
   const clearToSpawn=rightmost<W-GAP;
 
   obsT+=dt;
-  if(obsT>=(starActive?25:obsI)&&obsCanSpawn){
+  const fishObsI=fishMode?obsI*0.7:obsI;
+  if(obsT>=(starActive?25:fishObsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
     obsT=0;if(!starMode)obsI=Math.max(85,obsI-.20);
   }
@@ -430,6 +455,9 @@ function update(){
   if(!starMode&&itmT>=itmI&&clearToSpawn&&Math.random()<0.35){
     const tys=['escudo','escudo','livro','estrela'];
     if(pl.lives===1)tys.push('livro');
+    if(phase===1)tys.push('cerveja');
+    if(phase===2)tys.push('peixe');
+    if(phase===3)tys.push('pimenta');
     its.push({x:W+60,lane:Math.floor(Math.random()*LC),
       type:tys[Math.floor(Math.random()*tys.length)],phase:Math.random()*Math.PI*2});
     itmT=0;itmI=Math.max(90,itmI-.30);
@@ -457,6 +485,9 @@ function update(){
   if(flashT>0){flashT-=dt;if(flashT<=0){flashT=0;flash=false;}}
   if(shield&&(shT-=dt)<=0)shield=false;
   if(starMode&&(starT-=dt)<=0)starMode=false;
+  if(beerMode&&(beerT-=dt)<=0)beerMode=false;
+  if(fishMode&&(fishT-=dt)<=0)fishMode=false;
+  if(pepMode&&(pepT-=dt)<=0)pepMode=false;
   if(toastT>0){toastT-=dt;if(toastT<0)toastT=0;}
 
   // Animação de corrida — avança apenas quando no chão, sem ataque/dano
@@ -792,9 +823,9 @@ function drawPaused(){
 }
 
 /* ── INPUT ───────────────────────────────── */
-function laneUp(){if(pl.lane>0)   pl.lane--;}
-function laneDn(){if(pl.lane<LC-1)pl.lane++;}
-function doJump(){if(!pl.jumping){pl.jumping=true;pl.vy=JVY;}}
+function laneUp(){if(beerMode){if(pl.lane<LC-1)pl.lane++;}else{if(pl.lane>0)pl.lane--;}}
+function laneDn(){if(beerMode){if(pl.lane>0)pl.lane--;}else{if(pl.lane<LC-1)pl.lane++;}}
+function doJump(){if(!pl.jumping&&!beerMode){pl.jumping=true;pl.vy=JVY;}}
 function doAtk() {if(!pl.attacking){pl.attacking=true;pl.atT=24;}}
 
 function togglePause(){
