@@ -333,7 +333,7 @@ function drawItemEffects(){
 
   if(toastT>0){
     ctx.globalAlpha=Math.min(1,toastT/20);
-    ctx.fillStyle='#FFFFFF';
+    ctx.fillStyle='#66E0FF';
     ctx.fillText(toast,W/2,cy);
   }
 
@@ -344,10 +344,10 @@ function drawItemEffects(){
       ctx.fillStyle='#FFB347';ctx.fillText('⚡ ACELERADO',W/2,cy+yOff);yOff+=20;
     }
     if(shield){
-      ctx.fillStyle='#7ED6F5';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=20;
+      ctx.fillStyle='#FFFFFF';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=20;
     }
     if(starMode){
-      ctx.fillStyle='#FFE566';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);
+      ctx.fillStyle='#FFD700';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);
     }
   }
 
