@@ -976,6 +976,10 @@ function handleMenuClick(c){
   if(menu_btns.play&&hitBtn(menu_btns.play,c.x,c.y)){
     introSlide=0;introSlideX=0;introTarget=0;state=ST.INTRO;return;
   }
+  // DEV shortcut: área invisível no topo → vai direto para fase 3 (México)
+  if(hitBtn({x:0,y:0,w:W,h:40},c.x,c.y)){
+    phase=3;init();startPhaseIntro();return;
+  }
 }
 
 function handleHelpClick(c){
