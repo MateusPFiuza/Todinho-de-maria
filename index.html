@@ -503,8 +503,27 @@ function update(){
   obsT+=dt;
   const fishObsI=fishMode?Math.max(30,obsI*0.25):obsI; // peixe: 4x mais obstáculos
   if(obsT>=(starActive?25:fishObsI)&&obsCanSpawn){
-    obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
+    // Tipo e lane do obstáculo principal
+    const mainType=starMode?'c':['a','b','c'][Math.floor(Math.random()*3)];
+    // Tipo 'c' (desvio de lane) nunca spawna na lane atual do jogador
+    let mainLane=Math.floor(Math.random()*LC);
+    if(mainType==='c'){
+      const others=[0,1,2].filter(l=>l!==pl.lane);
+      mainLane=others[Math.floor(Math.random()*2)];
+    }
+    obs.push({x:W+60,lane:mainLane,type:mainType});
     obsT=0;if(!starMode)obsI=Math.max(55,obsI-.30);
+
+    // 28% chance de sequência: segundo obstáculo de tipo diferente logo atrás
+    if(!starMode&&Math.random()<0.28){
+      const seqType=['a','b','c'].filter(t=>t!==mainType)[Math.floor(Math.random()*2)];
+      let seqLane=Math.floor(Math.random()*LC);
+      if(seqType==='c'){
+        const others=[0,1,2].filter(l=>l!==pl.lane);
+        seqLane=others[Math.floor(Math.random()*2)];
+      }
+      obs.push({x:W+60+200,lane:seqLane,type:seqType});
+    }
   }
 
   itmT+=dt;
