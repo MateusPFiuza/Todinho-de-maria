@@ -144,7 +144,7 @@ function startPhaseIntro(){phaseIntroT=0;bgmPlay();state=ST.PHASE_INTRO;}
 
 function init(){
   score=0;dist=0;spd=5.2;  // score será calculado de dist em km
-  obsT=0;obsI=65;    // obstáculos — começa mais agressivo
+  obsT=0;obsI=75;    // obstáculos
   itmT=60;itmI=140;  // itens — menos frequentes que obstáculos
   shield=false;shT=0;flash=false;flashT=0;bgOff=0;starMode=false;starT=0;toast='';toastT=0;
   speedBoost={active:false,duration:0};
@@ -504,7 +504,7 @@ function update(){
   const fishObsI=fishMode?Math.max(30,obsI*0.25):obsI; // peixe: 4x mais obstáculos
   if(obsT>=(starActive?25:fishObsI)&&obsCanSpawn){
     obs.push({x:W+60,lane:Math.floor(Math.random()*LC),type:starMode?'c':['a','b','c'][Math.floor(Math.random()*3)]});
-    obsT=0;if(!starMode)obsI=Math.max(45,obsI-.30);
+    obsT=0;if(!starMode)obsI=Math.max(55,obsI-.30);
   }
 
   itmT+=dt;
@@ -512,7 +512,7 @@ function update(){
     const tys=['escudo','escudo','livro'];
     if(Math.random()<0.45)tys.push('estrela'); // estrela menos frequente
     if(pl.lives===1)tys.push('livro');
-    if(phase===1){tys.push('cerveja');tys.push('cerveja');}
+    if(phase===1)tys.push('cerveja');
     if(phase===2){tys.push('peixe');tys.push('peixe');}
     if(phase===3){tys.push('pimenta');tys.push('pimenta');}
     its.push({x:W+60,lane:Math.floor(Math.random()*LC),
