@@ -231,6 +231,28 @@ function drawPlayer(){
     ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.stroke();
     ctx.restore();
   }
+  if(pepMode){
+    const t=Date.now()/280;
+    const cx=pl.x, baseY=dy+PH+2;
+    const ft=(x,y,w,h,ph,col,al)=>{
+      const sw=Math.sin(t+ph)*w*0.22;
+      ctx.globalAlpha=al;ctx.fillStyle=col;
+      ctx.beginPath();
+      ctx.moveTo(x-w/2,y);
+      ctx.bezierCurveTo(x-w/2+sw*0.4,y-h*0.35,x+sw-w*0.08,y-h*0.88,x+sw,y-h);
+      ctx.bezierCurveTo(x+sw+w*0.08,y-h*0.88,x+w/2+sw*0.4,y-h*0.35,x+w/2,y);
+      ctx.closePath();ctx.fill();
+    };
+    ctx.save();
+    ft(cx-PW*0.35,baseY,PW*0.42,PH*0.65,0.0,'#BF360C',0.72);
+    ft(cx+PW*0.35,baseY,PW*0.42,PH*0.65,Math.PI,'#BF360C',0.72);
+    ft(cx,baseY,PW*1.05,PH*1.38,0.3,'#E53935',0.68);
+    ft(cx,baseY,PW*0.82,PH*1.08,0.8,'#FF6D00',0.68);
+    ft(cx,baseY,PW*0.60,PH*0.82,1.2,'#FFB300',0.70);
+    ft(cx,baseY,PW*0.38,PH*0.58,1.6,'#FFD600',0.72);
+    ft(cx,baseY,PW*0.18,PH*0.32,2.0,'#FFF9C4',0.65);
+    ctx.restore();
+  }
   const wKeys=phase===3?WALK_KEYS_MX:WALK_KEYS;
   const sk=pl.dead?'pd':pl.hitT?'ph':pl.attacking?'pa':pl.jumping?'pj':wKeys[walkFrame];
   if(rdy(sk)){
@@ -255,30 +277,6 @@ function drawPlayer(){
       const a=t+i*(Math.PI*2/3);
       ctx.fillText('💫',hx+Math.cos(a)*22,hy+Math.sin(a)*9);
     }
-    ctx.restore();
-  }
-  if(pepMode){
-    const t=Date.now()/280;
-    const cx=pl.x, baseY=dy+PH+2;
-    const ft=(x,y,w,h,ph,col,al)=>{
-      const sw=Math.sin(t+ph)*w*0.22;
-      ctx.globalAlpha=al;ctx.fillStyle=col;
-      ctx.beginPath();
-      ctx.moveTo(x-w/2,y);
-      ctx.bezierCurveTo(x-w/2+sw*0.4,y-h*0.35,x+sw-w*0.08,y-h*0.88,x+sw,y-h);
-      ctx.bezierCurveTo(x+sw+w*0.08,y-h*0.88,x+w/2+sw*0.4,y-h*0.35,x+w/2,y);
-      ctx.closePath();ctx.fill();
-    };
-    ctx.save();
-    // Línguas laterais (dão volume ao fogo)
-    ft(cx-PW*0.35,baseY,PW*0.42,PH*0.65,0.0,'#BF360C',0.72);
-    ft(cx+PW*0.35,baseY,PW*0.42,PH*0.65,Math.PI,'#BF360C',0.72);
-    // Camadas do exterior ao núcleo
-    ft(cx,baseY,PW*1.05,PH*1.38,0.3,'#E53935',0.68);
-    ft(cx,baseY,PW*0.82,PH*1.08,0.8,'#FF6D00',0.68);
-    ft(cx,baseY,PW*0.60,PH*0.82,1.2,'#FFB300',0.70);
-    ft(cx,baseY,PW*0.38,PH*0.58,1.6,'#FFD600',0.72);
-    ft(cx,baseY,PW*0.18,PH*0.32,2.0,'#FFF9C4',0.65);
     ctx.restore();
   }
 }
