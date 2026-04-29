@@ -427,24 +427,24 @@ function drawHUD(){
 
 // Efeitos de item sobrepostos ao jogo (não no HUD)
 function drawItemEffects(){
-  const cy=CTL_Y+16;
+  const lines=[];
+  if(toastT>0)           lines.push({t:toast,                   c:'#66E0FF'});
+  if(speedBoost?.active) lines.push({t:'⚡ ACELERADO',          c:'#FFB347'});
+  if(shield)             lines.push({t:'🛡 Dom da Fortaleza',   c:'#FFFFFF'});
+  if(starMode)           lines.push({t:'✨ Intercessão de Maria',c:'#FFD700'});
+  if(beerMode)           lines.push({t:'🍺 Comandos invertidos!',c:'#FF8F00'});
+  if(fishMode)           lines.push({t:'🐟 Aumento de obstáculos!',c:'#64B5F6'});
+  if(pepMode)            lines.push({t:'🌶 Arribaaaaaa!',        c:'#FF5252'});
+  if(!lines.length)return;
+
+  const lineH=18;
+  const zoneTop=CTL_Y+5, zoneBot=CTL_Y+CTL_H-22; // abaixo da barra de progresso
+  const totalH=lines.length*lineH;
+  let y=zoneTop+(zoneBot-zoneTop-totalH)/2+lineH/2;
+  y=Math.max(zoneTop+lineH/2, y); // nunca acima da zona
+
   ctx.save();ctx.textAlign='center';ctx.font="12px 'Press Start 2P'";ctx.globalAlpha=1;
-
-  if(toastT>0){
-    ctx.fillStyle='#66E0FF';
-    ctx.fillText(toast,W/2,cy);
-  }
-
-  if(speedBoost?.active||shield||starMode||beerMode||fishMode||pepMode){
-    let yOff=toastT>0?-18:0;
-    if(speedBoost?.active){ctx.fillStyle='#FFB347';ctx.fillText('⚡ ACELERADO',W/2,cy+yOff);yOff+=18;}
-    if(shield){ctx.fillStyle='#FFFFFF';ctx.fillText('🛡 Dom da Fortaleza',W/2,cy+yOff);yOff+=18;}
-    if(starMode){ctx.fillStyle='#FFD700';ctx.fillText('✨ Intercessão de Maria',W/2,cy+yOff);yOff+=18;}
-    if(beerMode){ctx.fillStyle='#FF8F00';ctx.fillText('🍺 Comandos invertidos!',W/2,cy+yOff);yOff+=18;}
-    if(fishMode){ctx.fillStyle='#64B5F6';ctx.fillText('🐟 Aumento de obstáculos!',W/2,cy+yOff);yOff+=18;}
-    if(pepMode){ctx.fillStyle='#FF5252';ctx.fillText('🌶 Arribaaaaaa!',W/2,cy+yOff);}
-  }
-
+  lines.forEach((l,i)=>{ctx.fillStyle=l.c;ctx.fillText(l.t,W/2,y+i*lineH);});
   ctx.restore();
 }
 
@@ -463,15 +463,15 @@ function checkCols(){
       if(it.type==='escudo'){shield=true;shT=300;spawnP(it.x,iy+IH/2,'#4CAF50',12);}
       if(it.type==='cerveja'){
         if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
-        else if(!starMode){beerMode=true;beerT=300;toast='🍺 Comandos invertidos!';toastT=120;spawnP(it.x,iy+IH/2,'#F9A825',12);}
+        else if(!starMode){beerMode=true;beerT=300;spawnP(it.x,iy+IH/2,'#F9A825',12);}
       }
       if(it.type==='peixe'){
         if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
-        else if(!starMode){fishMode=true;fishT=300;toast='🐟 Aumento de obstáculos!';toastT=120;spawnP(it.x,iy+IH/2,'#64B5F6',12);}
+        else if(!starMode){fishMode=true;fishT=300;spawnP(it.x,iy+IH/2,'#64B5F6',12);}
       }
       if(it.type==='pimenta'){
         if(shield){shield=false;shT=0;spawnP(it.x,iy+IH/2,'#00BFFF',12);}
-        else if(!starMode){pepMode=true;pepT=300;toast='🌶 Pimenta! Arribaaaaaa! Velocidade aumentando';toastT=120;spawnP(it.x,iy+IH/2,'#F44336',12);}
+        else if(!starMode){pepMode=true;pepT=300;spawnP(it.x,iy+IH/2,'#F44336',12);}
       }
       its.splice(i,1);
     }
