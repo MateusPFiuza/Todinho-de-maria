@@ -133,13 +133,16 @@ const BGM=[
   new Audio('assets/soundtrack/mexico.mp3'),
 ];
 BGM.forEach(a=>{a.loop=true;a.volume=0.5;});
-// bgm é sempre a faixa da fase atual
+const SFX_WIN=new Audio('assets/soundtrack/level_win.mp3');
+SFX_WIN.volume=0.75;
 function bgmPlay(){
   const a=BGM[phase-1]||BGM[0];
   BGM.forEach(x=>{x.pause();x.currentTime=0;});
   a.play().catch(()=>{});
 }
 function bgmStop(){BGM.forEach(a=>{a.pause();a.currentTime=0;});}
+function winSfxPlay(){SFX_WIN.currentTime=0;SFX_WIN.play().catch(()=>{});}
+function winSfxStop(){SFX_WIN.pause();SFX_WIN.currentTime=0;}
 function startPhaseIntro(){phaseIntroT=0;bgmPlay();state=ST.PHASE_INTRO;}
 
 function init(){
@@ -484,7 +487,7 @@ function update(){
   if(state!==ST.PLAY||pl.dead)return;
   bgOff+=spd*dt;dist+=spd*dt;
   score=dist/60;
-  if(score>=400){bgmStop();state=ST.PHASE_WIN;return;}
+  if(score>=400){bgmStop();winSfxPlay();state=ST.PHASE_WIN;return;}
   
   // Base speed + speed boost + pimenta
   let baseSpd=6.5+Math.min(dist/6000,5);
@@ -854,12 +857,13 @@ function drawPhaseWin(){
 
 function handlePhaseWinClick(c){
   if(game_btns.phaseNext&&hitBtn(game_btns.phaseNext,c.x,c.y)){
+    winSfxStop();
     if(phase<3){phase++;init();startPhaseIntro();}
     else{state=ST.WIN;}
     return;
   }
   if(game_btns.phaseMenu&&hitBtn(game_btns.phaseMenu,c.x,c.y)){
-    state=ST.MENU;return;
+    winSfxStop();state=ST.MENU;return;
   }
 }
 
