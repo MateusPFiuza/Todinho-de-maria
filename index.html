@@ -496,10 +496,9 @@ function checkCols(){
     const[ow,oh]=OS[o.type];
     const ox=o.x-ow/2+6,oy=LY[o.lane]-oh+6;
     if(!overlap(px,py,pw,ph,ox,oy,ow-12,oh-12))continue;
-    let ok=starMode;
-    if(o.type==='a')ok=ok||pl.jumping;
-    if(o.type==='b')ok=ok||pl.attacking;
-    if(o.type==='c')ok=ok||o.lane!==pl.lane;
+    let ok=starMode
+          ||(o.type==='a'&&pl.jumping)
+          ||(o.type==='b'&&pl.attacking);
     if(ok){
       spawnP(o.x,LY[o.lane]-oh/2,'#FFD700',12);
       if(o.type==='b'){const tys=['livro','escudo','estrela'];its.push({x:o.x,lane:o.lane,type:tys[Math.floor(Math.random()*tys.length)],phase:0});}
