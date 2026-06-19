@@ -392,8 +392,38 @@ function updVFX(){
     }
   }
 }
+function drawVFXCanvas(v){
+  const p=v.frame/3; // progresso 0→1
+  const al=Math.max(0,1-p)*v.alpha;
+  if(al<=0)return;
+  ctx.save();ctx.globalAlpha=al;
+  if(v.key==='vfx_dust'){
+    for(let i=0;i<7;i++){
+      const a=(i/7)*Math.PI*2,r=p*v.w*0.45;
+      ctx.fillStyle=i%2?'#BDBDBD':'#EEEEEE';
+      ctx.beginPath();ctx.arc(v.x+Math.cos(a)*r,v.y+Math.sin(a)*r*0.45,v.w*0.11*(1-p*0.5),0,Math.PI*2);ctx.fill();
+    }
+  } else if(v.key==='vfx_slash'){
+    ctx.strokeStyle='#FFD700';ctx.lineWidth=6*(1-p);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(v.x-v.w*0.38,v.y-v.h*0.38);ctx.lineTo(v.x+v.w*0.38,v.y+v.h*0.38);ctx.stroke();
+    ctx.strokeStyle='#FFFFFF';ctx.lineWidth=2.5*(1-p);
+    ctx.beginPath();ctx.moveTo(v.x-v.w*0.22,v.y-v.h*0.46);ctx.lineTo(v.x+v.w*0.46,v.y+v.h*0.22);ctx.stroke();
+  } else if(v.key==='vfx_explode'){
+    const cols=['#FF6D00','#FFD600','#FF3D00','#FFAB00'];
+    for(let i=0;i<8;i++){
+      const a=(i/8)*Math.PI*2+p,r=p*v.w*0.52;
+      ctx.fillStyle=cols[i%4];
+      ctx.beginPath();ctx.arc(v.x+Math.cos(a)*r,v.y+Math.sin(a)*r,v.w*0.11*(1-p*0.55),0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#FFF176';ctx.beginPath();ctx.arc(v.x,v.y,v.w*0.14*(1-p),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
 function drawVFX(){
-  for(const v of vfxAnims)vfxFrame(v.key,v.frame,v.x,v.y,v.w,v.h,v.alpha);
+  for(const v of vfxAnims){
+    if(rdy(v.key))vfxFrame(v.key,v.frame,v.x,v.y,v.w,v.h,v.alpha);
+    else drawVFXCanvas(v);
+  }
 }
 
 /* ── CONTROLS UI ─────────────────────────── */
@@ -760,7 +790,17 @@ function drawPhaseIntro(){
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   // Portal VFX centralizado
   const pf=Math.floor(Date.now()/150)%4;
-  vfxFrame('vfx_portal',pf,W/2,H/2-30,260,260,0.85);
+  if(rdy('vfx_portal')){vfxFrame('vfx_portal',pf,W/2,H/2-30,260,260,0.85);}
+  else{
+    const pt=Date.now()/1000;
+    ctx.save();
+    for(let i=0;i<3;i++){
+      ctx.strokeStyle=['#4FC3F7','#80DEEA','#B2EBF2'][i];ctx.lineWidth=7-i*2;ctx.globalAlpha=0.65;
+      ctx.beginPath();ctx.arc(W/2,H/2-30,55+i*22,pt+i*0.8,pt+i*0.8+Math.PI*1.6);ctx.stroke();
+    }
+    ctx.fillStyle='#E1F5FE';ctx.globalAlpha=0.18;ctx.beginPath();ctx.arc(W/2,H/2-30,48,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
   const ph=PHASES[phase-1];
   ctx.textAlign='center';
   ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font="13px 'Press Start 2P'";
@@ -887,7 +927,19 @@ function drawPhaseWin(){
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
   // Fogos de vitória em overlay
   const vf=Math.floor(Date.now()/200)%4;
-  vfxFrame('vfx_victory',vf,W/2,H/2,W,H*0.9,0.55);
+  if(rdy('vfx_victory')){vfxFrame('vfx_victory',vf,W/2,H/2,W,H*0.9,0.55);}
+  else{
+    const vt=Date.now()/400;
+    const vcols=['#FF4081','#FFD700','#00BCD4','#76FF03','#FF6D00','#EA80FC'];
+    ctx.save();
+    for(let i=0;i<22;i++){
+      const x=W*(((Math.sin(i*2.3+vt*0.4)+1)/2));
+      const y=H*((((Math.cos(i*1.7+vt*0.25)+1)/2+vt*0.08)%1));
+      ctx.fillStyle=vcols[i%vcols.length];ctx.globalAlpha=0.7;
+      ctx.save();ctx.translate(x,y);ctx.rotate(vt+i);ctx.fillRect(-3,-7,6,14);ctx.restore();
+    }
+    ctx.restore();
+  }
   ctx.textAlign='center';
 
   // Pré-calcula dimensões da imagem para centralizar verticalmente
@@ -948,7 +1000,19 @@ function handlePhaseWinClick(c){
 function drawWin(){
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(0,0,W,H);
   const vf=Math.floor(Date.now()/180)%4;
-  vfxFrame('vfx_victory',vf,W/2,H/2,W,H,0.5);
+  if(rdy('vfx_victory')){vfxFrame('vfx_victory',vf,W/2,H/2,W,H,0.5);}
+  else{
+    const vt2=Date.now()/350;
+    const vcols2=['#FF4081','#FFD700','#00BCD4','#76FF03','#FF6D00','#EA80FC'];
+    ctx.save();
+    for(let i=0;i<28;i++){
+      const x=W*(((Math.sin(i*2.1+vt2*0.45)+1)/2));
+      const y=H*((((Math.cos(i*1.9+vt2*0.3)+1)/2+vt2*0.09)%1));
+      ctx.fillStyle=vcols2[i%vcols2.length];ctx.globalAlpha=0.72;
+      ctx.save();ctx.translate(x,y);ctx.rotate(vt2+i*0.7);ctx.fillRect(-3,-7,6,14);ctx.restore();
+    }
+    ctx.restore();
+  }
   ctx.textAlign='center';
   ctx.fillStyle='#FFD700';ctx.font="21px 'Press Start 2P'";ctx.fillText('🎉 PARABÉNS! 🎉',W/2,130);
   ctx.fillStyle='#fff';ctx.font="11px 'Press Start 2P'";ctx.fillText('Você completou as',W/2,178);
