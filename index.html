@@ -57,6 +57,12 @@ const SRCS={
   ma1:'assets/maria/aparecida.png',
   ma2:'assets/maria/fatima.png',
   ma3:'assets/maria/guadalupe.png',
+  vfx_dust:   'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174400_7cdea56e-d77a-477f-8d38-72e86fc37a25.png',
+  vfx_slash:  'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174402_9b4e9434-c90a-42c6-8a23-6d00d0f816b0.png',
+  vfx_explode:'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174414_fbd25f23-51d3-475e-a1ad-f3a6dbdf6325.png',
+  vfx_holy:   'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174416_4f030ff8-ca5f-423b-8d17-002b86f3e5dc.png',
+  vfx_portal: 'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174423_74d97e43-16f2-4d6f-acdb-f5aeb7e73f9b.png',
+  vfx_victory:'https://d8j0ntlcm91z4.cloudfront.net/user_3F5X4d3OI55U6hQWZK4l6iVx9En/hf_20260619_174427_e6dab3d6-27f6-4211-95c7-9bdb05247895.png',
 };
 const TOTAL=Object.keys(SRCS).length;
 for(const[k,v]of Object.entries(SRCS)){
@@ -123,6 +129,7 @@ let walkFrame=0,walkT=0;
 let muted=false;
 let lastTime=0,dt=1;
 let paused=false;
+let vfxAnims=[];
 let menu_btns={};
 let game_btns={};
 let intro_btns={};
@@ -159,7 +166,7 @@ function init(){
   speedBoost={active:false,duration:0};
   beerMode=false;beerT=0;fishMode=false;fishT=0;pepMode=false;pepT=0;
   walkFrame=0;walkT=0;
-  obs=[];its=[];parts=[];
+  obs=[];its=[];parts=[];vfxAnims=[];
   pl={lane:1,x:LANE.px[1],y:LY[1]-PH,vy:0,jOff:0,
       jumping:false,attacking:false,atT:0,hitT:0,lives:3,dead:false};
   paused=false;
@@ -264,10 +271,10 @@ function drawPlayer(){
     ctx.fillStyle='#000';ctx.fillRect(dx+13,dy+17,5,5);ctx.fillRect(dx+39,dy+17,5,5);
   }
   if(starMode){
-    ctx.save();ctx.globalAlpha=0.2+0.2*Math.abs(Math.sin(Date.now()/70));
-    ctx.fillStyle='#FFD700';
-    ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.fill();
-    ctx.restore();
+    const hf=Math.floor(Date.now()/120)%4;
+    const ha=0.55+0.2*Math.abs(Math.sin(Date.now()/250));
+    if(rdy('vfx_holy'))vfxFrame('vfx_holy',hf,pl.x,dy+PH/2,PW*2.2,PH*2.2,ha);
+    else{ctx.save();ctx.globalAlpha=ha*0.5;ctx.fillStyle='#FFD700';ctx.beginPath();ctx.ellipse(pl.x,dy+PH/2,PW*0.62,PH*0.54,0,0,Math.PI*2);ctx.fill();ctx.restore();}
   }
   if(beerMode){
     const t=Date.now()/600;
@@ -360,6 +367,33 @@ function drawP(){
   ctx.save();
   for(const p of parts){ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
   ctx.restore();
+}
+
+/* ── VFX SPRITE SHEET SYSTEM ─────────────── */
+function vfxFrame(key, frame, cx, cy, dw, dh, alpha){
+  if(!rdy(key))return;
+  const img=IMG[key];
+  const fw=img.naturalWidth/4, fh=img.naturalHeight;
+  ctx.save();
+  ctx.globalAlpha=alpha??1;
+  ctx.drawImage(img,frame*fw,0,fw,fh,cx-dw/2,cy-dh/2,dw,dh);
+  ctx.restore();
+}
+function spawnVFX(key,x,y,w,h,frameRate,loop,alpha){
+  vfxAnims.push({key,x,y,w,h,frame:0,timer:0,frameRate:frameRate??6,loop:!!loop,alpha:alpha??1});
+}
+function updVFX(){
+  for(let i=vfxAnims.length-1;i>=0;i--){
+    const v=vfxAnims[i];
+    v.timer+=dt;
+    if(v.timer>=v.frameRate){
+      v.timer-=v.frameRate;v.frame++;
+      if(v.frame>=4){if(v.loop)v.frame=0;else{vfxAnims.splice(i,1);continue;}}
+    }
+  }
+}
+function drawVFX(){
+  for(const v of vfxAnims)vfxFrame(v.key,v.frame,v.x,v.y,v.w,v.h,v.alpha);
 }
 
 /* ── CONTROLS UI ─────────────────────────── */
@@ -501,7 +535,10 @@ function checkCols(){
           ||(o.type==='b'&&pl.attacking);
     if(ok){
       spawnP(o.x,LY[o.lane]-oh/2,'#FFD700',12);
-      if(o.type==='b'){const tys=['livro','escudo','estrela'];its.push({x:o.x,lane:o.lane,type:tys[Math.floor(Math.random()*tys.length)],phase:0});}
+      if(o.type==='b'){
+        spawnVFX('vfx_explode',o.x,LY[o.lane]-oh/2,100,100,5);
+        const tys=['livro','escudo','estrela'];its.push({x:o.x,lane:o.lane,type:tys[Math.floor(Math.random()*tys.length)],phase:0});
+      }
       obs.splice(i,1);
     } else if(shield){
       shield=false;shT=0;spawnP(pl.x,pl.y+PH/2,'#00BFFF',12);obs.splice(i,1);
@@ -589,7 +626,8 @@ function update(){
   // Jump physics
   if(pl.jumping){
     pl.jOff+=pl.vy*dt;pl.vy+=GR*dt;
-    if(pl.jOff>=0){pl.jOff=0;pl.vy=0;pl.jumping=false;}
+    if(pl.jOff>=0){pl.jOff=0;pl.vy=0;pl.jumping=false;
+      spawnVFX('vfx_dust',pl.x,LY[pl.lane]+2,96,48,5);}
   }
 
   if(pl.atT>0){pl.atT-=dt;if(pl.atT<=0){pl.atT=0;pl.attacking=false;}}
@@ -610,7 +648,7 @@ function update(){
 
   for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd*dt;if(obs[i].x<-90)obs.splice(i,1);}
   for(let i=its.length-1;i>=0;i--){its[i].x-=spd*dt;if(its[i].x<-50)its.splice(i,1);}
-  checkCols();updP();
+  checkCols();updP();updVFX();
 }
 
 /* ── SCREENS ─────────────────────────────── */
@@ -720,9 +758,12 @@ function handleIntroClick(c){
 /* ── PHASE INTRO SCREEN ──────────────────────────────────── */
 function drawPhaseIntro(){
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // Portal VFX centralizado
+  const pf=Math.floor(Date.now()/150)%4;
+  vfxFrame('vfx_portal',pf,W/2,H/2-30,260,260,0.85);
   const ph=PHASES[phase-1];
   ctx.textAlign='center';
-  ctx.fillStyle='rgba(255,255,255,0.45)';ctx.font="13px 'Press Start 2P'";
+  ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font="13px 'Press Start 2P'";
   ctx.fillText('FASE '+ph.num,W/2,H/2-38);
   ctx.fillStyle='#FFD700';ctx.font="28px 'Press Start 2P'";
   ctx.fillText(ph.name,W/2,H/2+16);
@@ -844,6 +885,9 @@ function drawFlag(cx,cy,w,h){
 function drawPhaseWin(){
   const ph=PHASES[phase-1];
   ctx.fillStyle='rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,H);
+  // Fogos de vitória em overlay
+  const vf=Math.floor(Date.now()/200)%4;
+  vfxFrame('vfx_victory',vf,W/2,H/2,W,H*0.9,0.55);
   ctx.textAlign='center';
 
   // Pré-calcula dimensões da imagem para centralizar verticalmente
@@ -903,6 +947,8 @@ function handlePhaseWinClick(c){
 /* ── WIN SCREEN ──────────────────────────────────────────── */
 function drawWin(){
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(0,0,W,H);
+  const vf=Math.floor(Date.now()/180)%4;
+  vfxFrame('vfx_victory',vf,W/2,H/2,W,H,0.5);
   ctx.textAlign='center';
   ctx.fillStyle='#FFD700';ctx.font="21px 'Press Start 2P'";ctx.fillText('🎉 PARABÉNS! 🎉',W/2,130);
   ctx.fillStyle='#fff';ctx.font="11px 'Press Start 2P'";ctx.fillText('Você completou as',W/2,178);
@@ -957,7 +1003,7 @@ function drawPaused(){
 function laneUp(){if(beerMode){if(pl.lane<LC-1)pl.lane++;}else{if(pl.lane>0)pl.lane--;}}
 function laneDn(){if(beerMode){if(pl.lane>0)pl.lane--;}else{if(pl.lane<LC-1)pl.lane++;}}
 function doJump(){if(!pl.jumping&&!beerMode){pl.jumping=true;pl.vy=JVY;}}
-function doAtk() {if(!pl.attacking){pl.attacking=true;pl.atT=24;}}
+function doAtk() {if(!pl.attacking){pl.attacking=true;pl.atT=24;spawnVFX('vfx_slash',pl.x+50,pl.y+PH/2,110,110,5);}}
 
 function togglePause(){
   if(state===ST.PLAY){
@@ -1124,7 +1170,7 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();
+    drawP();drawVFX();
     drawHUD();
     drawCtl();drawItemEffects();
     drawPaused();
@@ -1151,7 +1197,7 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();drawHUD();drawCtl();drawItemEffects();drawWin();
+    drawP();drawVFX();drawHUD();drawCtl();drawItemEffects();drawWin();
   } else {
     // ST.PLAY
     update();
@@ -1162,7 +1208,7 @@ function frame(ts){
       obs.filter(o=>o.lane===lane).forEach(drawObs);
       if(pl.lane===lane) drawPlayer();
     }
-    drawP();
+    drawP();drawVFX();
     drawHUD();
     drawCtl();drawItemEffects();
   }
