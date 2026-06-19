@@ -418,16 +418,18 @@ function drawVFXCanvas(v){
   if(al<=0)return;
   ctx.save();ctx.globalAlpha=al;
   if(v.key==='vfx_dust'){
-    // Nuvem de poeira em expansão radial
-    for(let i=0;i<8;i++){
-      const a=(i/8)*Math.PI*2, r=p*v.w*0.55+8;
-      const sz=v.w*0.15*(1.1-p*0.7);
-      ctx.fillStyle=i%2?'#C8C8C8':'#FFFFFF';
+    // Nuvem de poeira com contorno escuro para visibilidade em qualquer fundo
+    for(let i=0;i<6;i++){
+      const a=(i/6)*Math.PI*2, r=p*v.w*0.55+4;
+      const sz=v.w*0.18*(1.1-p*0.6);
+      // contorno escuro primeiro
+      ctx.fillStyle='rgba(80,60,40,0.45)';
+      ctx.beginPath();ctx.arc(v.x+Math.cos(a)*r,v.y+Math.sin(a)*r*0.5,sz+2,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=i%2?'#D4B896':'#F0DFC0';
       ctx.beginPath();ctx.arc(v.x+Math.cos(a)*r,v.y+Math.sin(a)*r*0.5,sz,0,Math.PI*2);ctx.fill();
     }
-    // nuvem central
-    ctx.fillStyle='rgba(220,220,220,0.6)';
-    ctx.beginPath();ctx.arc(v.x,v.y,v.w*0.2*(1-p*0.8),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(210,185,145,0.7)';
+    ctx.beginPath();ctx.arc(v.x,v.y,v.w*0.22*(1-p*0.8),0,Math.PI*2);ctx.fill();
   } else if(v.key==='vfx_slash'){
     // Slash dourado com brilho
     ctx.lineCap='round';
@@ -714,7 +716,15 @@ function update(){
   // Animação de corrida — avança apenas quando no chão, sem ataque/dano
   if(!pl.jumping&&!pl.attacking&&pl.hitT<=0&&!pl.dead){
     walkT+=dt;
-    if(walkT>=WALK_SPD){walkT=0;walkFrame=(walkFrame+1)%WALK_KEYS.length;}
+    if(walkT>=WALK_SPD){
+      walkT=0;
+      const prevFrame=walkFrame;
+      walkFrame=(walkFrame+1)%WALK_KEYS.length;
+      // Rastro de pé no chão a cada 2 frames de animação
+      if(walkFrame%2===0){
+        spawnVFX('vfx_dust', pl.x-14, LY[pl.lane]+4, 52, 22, 8);
+      }
+    }
   }
 
   for(let i=obs.length-1;i>=0;i--){obs[i].x-=spd*dt;if(obs[i].x<-90)obs.splice(i,1);}
