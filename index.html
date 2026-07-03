@@ -115,6 +115,8 @@ let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
 let phase=1,phaseIntroT=0,adT=0;
 const AD_DURATION=180; // 3s a 60fps
+let deathCount=0;
+const AD_DEATH_INTERVAL=5; // mostra publicidade a cada 5 mortes
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};
@@ -513,7 +515,11 @@ function checkCols(){
     } else {
       pl.lives--;pl.hitT=44;flash=true;flashT=18;
       spawnP(pl.x,pl.y+PH/2,'#F44336',10);obs.splice(i,1);
-      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>{init();startPhaseAd();},1200);}
+      if(pl.lives<=0){
+        pl.dead=true;bgmStop();deathCount++;
+        const showAd=deathCount%AD_DEATH_INTERVAL===0;
+        setTimeout(()=>{init();showAd?startPhaseAd():startPhaseIntro();},1200);
+      }
     }
   }
 }
@@ -716,16 +722,18 @@ function handleIntroClick(c){
   if(Math.abs(introSlideX-introTarget)>4)return; // ignora durante animação
   if(introSlide===0){introTarget=-W;return;}
   if(intro_btns.play&&hitBtn(intro_btns.play,c.x,c.y)){
-    phase=1;init();startPhaseAd();
+    phase=1;deathCount=0;init();startPhaseIntro();
   }
 }
 
 /* ── PHASE AD SCREEN (publicidade antes da fase) ─────────── */
 function drawPhaseAd(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(rdy('tl')){
-    ctx.drawImage(IMG.tl,0,0,W,H);
-  } else {
-    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+    const iw=IMG.tl.naturalWidth,ih=IMG.tl.naturalHeight;
+    const scale=Math.min(W/iw,H/ih);
+    const dw=iw*scale,dh=ih*scale;
+    ctx.drawImage(IMG.tl,(W-dw)/2,(H-dh)/2,dw,dh);
   }
   const secsLeft=Math.max(0,Math.ceil((AD_DURATION-adT)/60));
   const cx=W-38,cy=38,r=24;
@@ -1004,7 +1012,7 @@ function handleMenuClick(c){
   }
   // DEV shortcut: área invisível no topo → vai direto para fase 3 (México)
   if(hitBtn({x:0,y:0,w:W,h:40},c.x,c.y)){
-    phase=3;init();startPhaseAd();return;
+    phase=3;deathCount=0;init();startPhaseIntro();return;
   }
 }
 
@@ -1036,7 +1044,7 @@ function handlePausedClick(c){
 function handleGameOverClick(c){
   if(game_btns.restart&&hitBtn(game_btns.restart,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    phase=1;init();startPhaseAd();return;
+    phase=1;deathCount=0;init();startPhaseIntro();return;
   }
   if(game_btns.menu&&hitBtn(game_btns.menu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
