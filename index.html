@@ -54,6 +54,7 @@ const SRCS={
   bc2:'assets/backgrounds/bg_cenario_2.png',
   bc3:'assets/backgrounds/bg_cenario_3.png',
   t1:'assets/telas/tela_1.png',
+  tl:'assets/telas/tela_loading.png',
   ma1:'assets/maria/aparecida.png',
   ma2:'assets/maria/fatima.png',
   ma3:'assets/maria/guadalupe.png',
@@ -104,7 +105,7 @@ const B={
 };
 
 /* ── STATE ───────────────────────────────── */
-const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6,PHASE_INTRO:7,PHASE_WIN:8};
+const ST={MENU:0,HELP:1,PLAY:2,PAUSED:3,OVER:4,WIN:5,INTRO:6,PHASE_INTRO:7,PHASE_WIN:8,AD:9};
 const PHASES=[
   {num:1,name:'Brasil',   flag:'🇧🇷',sanctuary:'Santuário de Aparecida'},
   {num:2,name:'Portugal', flag:'🇵🇹',sanctuary:'Santuário de Fátima'},
@@ -112,7 +113,8 @@ const PHASES=[
 ];
 let state=ST.MENU;
 let hs=+localStorage.getItem('tdm_hs')||0;
-let phase=1,phaseIntroT=0;
+let phase=1,phaseIntroT=0,adT=0;
+const AD_DURATION=180; // 3s a 60fps
 let pl,obs,its,parts,score,spd,obsT,obsI,itmT,itmI;
 let shield,shT,flash,flashT,bgOff,dist,starMode,starT,toast,toastT;
 let speedBoost={active:false,duration:0};
@@ -150,6 +152,7 @@ function toggleMute(){
   SFX_WIN.muted=muted;
 }
 function startPhaseIntro(){phaseIntroT=0;bgmPlay();state=ST.PHASE_INTRO;}
+function startPhaseAd(){adT=0;state=ST.AD;}
 
 function init(){
   score=0;dist=0;spd=5.2;  // score será calculado de dist em km
@@ -510,7 +513,7 @@ function checkCols(){
     } else {
       pl.lives--;pl.hitT=44;flash=true;flashT=18;
       spawnP(pl.x,pl.y+PH/2,'#F44336',10);obs.splice(i,1);
-      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>{init();startPhaseIntro();},1200);}
+      if(pl.lives<=0){pl.dead=true;bgmStop();setTimeout(()=>{init();startPhaseAd();},1200);}
     }
   }
 }
@@ -713,8 +716,32 @@ function handleIntroClick(c){
   if(Math.abs(introSlideX-introTarget)>4)return; // ignora durante animação
   if(introSlide===0){introTarget=-W;return;}
   if(intro_btns.play&&hitBtn(intro_btns.play,c.x,c.y)){
-    phase=1;init();startPhaseIntro();
+    phase=1;init();startPhaseAd();
   }
+}
+
+/* ── PHASE AD SCREEN (publicidade antes da fase) ─────────── */
+function drawPhaseAd(){
+  if(rdy('tl')){
+    ctx.drawImage(IMG.tl,0,0,W,H);
+  } else {
+    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  }
+  const secsLeft=Math.max(0,Math.ceil((AD_DURATION-adT)/60));
+  const cx=W-38,cy=38,r=24;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='#FFD700';ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,adT/AD_DURATION));
+  ctx.stroke();
+  ctx.fillStyle='#FFD700';ctx.font="16px 'Press Start 2P'";
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(secsLeft,cx,cy+1);
+  ctx.restore();
 }
 
 /* ── PHASE INTRO SCREEN ──────────────────────────────────── */
@@ -891,7 +918,7 @@ function drawPhaseWin(){
 function handlePhaseWinClick(c){
   if(game_btns.phaseNext&&hitBtn(game_btns.phaseNext,c.x,c.y)){
     winSfxStop();
-    if(phase<3){phase++;init();startPhaseIntro();}
+    if(phase<3){phase++;init();startPhaseAd();}
     else{state=ST.WIN;}
     return;
   }
@@ -977,7 +1004,7 @@ function handleMenuClick(c){
   }
   // DEV shortcut: área invisível no topo → vai direto para fase 3 (México)
   if(hitBtn({x:0,y:0,w:W,h:40},c.x,c.y)){
-    phase=3;init();startPhaseIntro();return;
+    phase=3;init();startPhaseAd();return;
   }
 }
 
@@ -1009,7 +1036,7 @@ function handlePausedClick(c){
 function handleGameOverClick(c){
   if(game_btns.restart&&hitBtn(game_btns.restart,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
-    phase=1;init();startPhaseIntro();return;
+    phase=1;init();startPhaseAd();return;
   }
   if(game_btns.menu&&hitBtn(game_btns.menu,c.x,c.y)){
     if(score>hs){hs=score;localStorage.setItem('tdm_hs',Math.floor(hs));}
@@ -1024,6 +1051,7 @@ cv.addEventListener('touchstart',e=>{
   
   // Handle menu/help clicks
   if(state===ST.MENU){handleMenuClick(c);sc=null;return;}
+  if(state===ST.AD){sc=null;return;}
   if(state===ST.PHASE_INTRO){sc=null;return;}
   if(state===ST.INTRO){handleIntroClick(c);sc=null;return;}
   if(state===ST.HELP){handleHelpClick(c);sc=null;return;}
@@ -1062,6 +1090,7 @@ cv.addEventListener('click',e=>{
   const c={x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
   
   if(state===ST.MENU){handleMenuClick(c);return;}
+  if(state===ST.AD)return;
   if(state===ST.PHASE_INTRO)return;
   if(state===ST.INTRO){handleIntroClick(c);return;}
   if(state===ST.HELP){handleHelpClick(c);return;}
@@ -1084,7 +1113,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();return;
   }
 
-  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER||state===ST.PHASE_INTRO||state===ST.PHASE_WIN){
+  if(state===ST.INTRO||state===ST.HELP||state===ST.PAUSED||state===ST.OVER||state===ST.AD||state===ST.PHASE_INTRO||state===ST.PHASE_WIN){
     e.preventDefault();return;
   }
   
@@ -1107,6 +1136,10 @@ function frame(ts){
   
   if(state===ST.MENU){
     drawMenu();
+  } else if(state===ST.AD){
+    drawPhaseAd();
+    adT+=dt;
+    if(adT>=AD_DURATION){adT=0;startPhaseIntro();}
   } else if(state===ST.PHASE_INTRO){
     drawPhaseIntro();
     phaseIntroT+=dt;
